@@ -5,9 +5,23 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>ShotUtil</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <script src="./app.js"></script>
+    <script src="./app.js" async defer></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        .page {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+    </style>
 </head>
 <body>
-    
+    <canvas id="canvas" class="page"></canvas>
 </body>
 </html>
