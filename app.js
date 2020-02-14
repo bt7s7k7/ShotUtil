@@ -12,7 +12,7 @@ var getRectEnd = (rect) => ({ x: rect.x + rect.width, y: rect.y + rect.height })
 /** @param {Rect} rect */
 var copyRect = (rect) => Object.assign({}, rect);
 /** @param {Rect} rect */
-var spreadRect = (rect) => [rect.x, rect.y, rect.height, rect.width]
+var spreadRect = (rect) => [rect.x, rect.y, rect.width, rect.height]
 var EDGE_CONTROL_WIDTH = 10
 /**
  * @param {Rect} rect 
@@ -32,47 +32,54 @@ class Drawable {
      * @param {number} oX
      * @param {number} oY
      * @param {Renderer} renderer
+     * @param {"image" | "mover" | "edges"} stage
      */
-    draw(oX, oY, renderer) {
-        renderer.ctx.fillStyle = "white"
-        var baseRect = copyRect(this.rect)
-        baseRect.x += oX
-        baseRect.y += oY
-        renderer.ctx.fillRect(...spreadRect(baseRect))
-    }
-
-    /**
-     * @param {number} oX
-     * @param {number} oY
-     * @param {Renderer} renderer
-     */
-    drawControls(oX, oY, renderer) {
-        renderer.ctx.strokeStyle = "#00ffff"
-        renderer.ctx.fillStyle = "#0099ff"
+    draw(oX, oY, renderer, stage) {
         var start = copyRect(this.rect)
         start.x += oX
         start.y += oY
-        renderer.ctx.strokeRect(...spreadRect(start))
+        switch (stage) {
+            case "image":
+                renderer.ctx.fillStyle = "white"
+                renderer.ctx.fillRect(...spreadRect(start))
+                break
+            case "mover":
+                renderer.ctx.fillStyle = "#0099ff"
+                renderer.ctx.strokeRect(...spreadRect(start))
 
-        var end = getRectEnd(start)
-        var drawControl = (/** @type {Rect} */rect) => {
-            renderer.doControl(rect, (over, down, delta) => {
-                if (down) {
-                    this.rect.x += delta.x
-                    this.rect.y += delta.y
+                renderer.doControl(start, (over, down, delta) => {
+                    if (down) {
+                        this.rect.x += delta.x
+                        this.rect.y += delta.y
+                    }
+                })
+                break
+            case "edges":
+                var end = getRectEnd(start)
+                var drawControl = (/** @type {Rect} */ rect, /** @type {bool} */ posX, /** @type {bool} */ posY) => {
+                    renderer.doControl(rect, (over, down, delta) => {
+                        if (down) {
+                            this.rect.width += posX ? -delta.x : delta.x
+                            this.rect.height += posY ? -delta.y : delta.y
+                            if (posX) this.rect.x += delta.x
+                            if (posY) this.rect.y += delta.y
+                        }
+
+                        renderer.ctx.strokeStyle = "#00ffff"
+                        renderer.ctx.fillStyle = "#0099ff"
+                        renderer.ctx.fillRect(...spreadRect(rect))
+                        renderer.ctx.strokeRect(...spreadRect(rect))
+                    })
                 }
 
-                renderer.ctx.strokeStyle = "#00ffff"
-                renderer.ctx.fillStyle = over ? (down ? "green" : "red") : "#0099ff"
-                renderer.ctx.fillRect(...spreadRect(rect))
-                renderer.ctx.strokeRect(...spreadRect(rect))
-            })
+                drawControl(newRect(start.x - EDGE_CONTROL_WIDTH / 2, start.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH), true, true)
+                drawControl(newRect(end.x - EDGE_CONTROL_WIDTH / 2, start.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH), false, true)
+                drawControl(newRect(start.x - EDGE_CONTROL_WIDTH / 2, end.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH), true, false)
+                drawControl(newRect(end.x - EDGE_CONTROL_WIDTH / 2, end.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH), false, false)
+                break
         }
 
-        drawControl(newRect(start.x - EDGE_CONTROL_WIDTH / 2, start.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH))
-        drawControl(newRect(end.x - EDGE_CONTROL_WIDTH / 2, start.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH))
-        drawControl(newRect(start.x - EDGE_CONTROL_WIDTH / 2, end.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH))
-        drawControl(newRect(end.x - EDGE_CONTROL_WIDTH / 2, end.y - EDGE_CONTROL_WIDTH / 2, EDGE_CONTROL_WIDTH, EDGE_CONTROL_WIDTH))
+
     }
 }
 class Renderer {
@@ -112,7 +119,7 @@ class Renderer {
 
         this.overHandled = false
     }
-    
+
     /**
      * 
      * @param {Rect} rect 
@@ -126,24 +133,23 @@ class Renderer {
             } else callback(true, false, { x: 0, y: 0 })
         } else callback(false, false, { x: 0, y: 0 })
     }
-    
+
     draw() {
         var clientRect = canvas.getBoundingClientRect()
         canvas.width = clientRect.width
         canvas.height = clientRect.height
-        
-        for (let drawable of this.drawables) {
-            drawable.draw(Math.floor(this.oX + clientRect.width / 2), Math.floor(this.oY + clientRect.height / 2), this)
-        }
-        for (let drawable of this.drawables) {
-            drawable.drawControls(Math.floor(this.oX + clientRect.width / 2), Math.floor(this.oY + clientRect.height / 2), this)
-        }
-        
+
+        {} (["image", "edges", "mover", "edges"]).forEach(v => {
+            for (let drawable of this.drawables) {
+                drawable.draw(Math.floor(this.oX + clientRect.width / 2), Math.floor(this.oY + clientRect.height / 2), this, v)
+            }
+        })
+
         this.wasMouseDown = this.mouseDown
         this.overHandled = false
-        this.lastMousePos = {...this.mousePos}
+        this.lastMousePos = { ...this.mousePos }
     }
-    
+
 
 }
 
