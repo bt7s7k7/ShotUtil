@@ -1,5 +1,5 @@
 export class Rect {
-    public x : number;
+    public x: number;
 
     constructor(x: number | { x: number, y: number, width: number, height: number } = 0, public y = 0, public width = 0, public height = 0) {
         if (typeof x == "object") {
@@ -33,10 +33,14 @@ export class Rect {
             return new Rect(this.x + offset, this.y + offsetY, this.width, this.height)
         }
     }
+
+    copy() {
+        return new Rect(this.x, this.y, this.width, this.height)
+    }
 }
 
 export class Point {
-    public x : number;
+    public x: number;
     constructor(x: number | { x: number, y: number } = 0, public y = 0) {
         if (typeof x == "object") {
             this.x = x.x
@@ -51,10 +55,23 @@ export class Point {
     mul(amount: number) {
         return new Point(this.x * amount, this.y * amount)
     }
+
+    add(other: { x: number, y: number } | number, otherY: number = 0) {
+        if (typeof other == "object")
+            return new Point(this.x + other.x, this.y + other.y)
+        else
+            return new Point(this.x + other, this.y + otherY)
+    }
+
+    copy() {
+        return new Point(this.x, this.y)
+    }
 }
 
 export class CanvasGUI {
     public ctx: CanvasRenderingContext2D
+    public offset: Point = new Point()
+    public centerCoords: boolean = false
 
     constructor(public canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d", { alpha: true })
@@ -65,6 +82,9 @@ export class CanvasGUI {
         this.canvas.width = size.width
         this.canvas.height = size.height
 
-        var offset = size.mul(0.5).end()
+        var currOffset = this.offset.copy()
+        if (this.centerCoords) currOffset = currOffset.add(size.mul(0.5).end())
+
+        
     }
 }
