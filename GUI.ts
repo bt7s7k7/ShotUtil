@@ -69,7 +69,7 @@ export class Point {
 }
 
 export class CanvasGUI {
-    public ctx: CanvasRenderingContext2D
+    protected ctx: CanvasRenderingContext2D
     public offset: Point = new Point()
     public centerCoords: boolean = false
 
