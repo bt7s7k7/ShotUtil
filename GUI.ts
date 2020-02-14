@@ -7,10 +7,10 @@ export class Rect {
             this.y = x.y
             this.width = x.width
             this.height = x.height
-        } else this.x = 0
+        } else this.x = x
     }
 
-    spread() {
+    spread(): [number, number, number, number] {
         return [this.x, this.y, this.width, this.height]
     }
 
@@ -48,7 +48,7 @@ export class Point {
         } else this.x = x
     }
 
-    spread() {
+    spread(): [number, number] {
         return [this.x, this.y]
     }
 
@@ -68,10 +68,36 @@ export class Point {
     }
 }
 
+export class GUIControl {
+    protected parent: GUIControl = null
+    protected children: GUIControl[] = []
+    public rect: Rect = new Rect()
+
+    remove() {
+        if (this.parent)
+            this.parent.children.splice(this.parent.children.indexOf(this), 1)
+    }
+
+    append(control: GUIControl) {
+        control.remove()
+        control.parent = this
+        this.children.push(control)
+    }
+
+    draw(offset: Point, ctx: CanvasRenderingContext2D) {
+        ctx.strokeStyle = "white"
+        ctx.strokeRect(...this.rect.translate(offset).spread())
+    }
+
+    getParent() { return this.parent }
+    getChildren() { return this.children }
+}
+
 export class CanvasGUI {
     protected ctx: CanvasRenderingContext2D
     public offset: Point = new Point()
     public centerCoords: boolean = false
+    protected root: GUIControl = new GUIControl()
 
     constructor(public canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d", { alpha: true })
@@ -85,6 +111,15 @@ export class CanvasGUI {
         var currOffset = this.offset.copy()
         if (this.centerCoords) currOffset = currOffset.add(size.mul(0.5).end())
 
-        
+        this.drawControl(this.root, currOffset)
+    }
+
+    drawControl(control: GUIControl, offset: Point) {
+        control.draw(offset, this.ctx)
+        control.getChildren().forEach(v => this.drawControl(v, offset))
+    }
+
+    addControl(control: GUIControl) {
+        this.root.append(control)
     }
 }
