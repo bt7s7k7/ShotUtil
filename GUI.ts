@@ -26,7 +26,7 @@ export class Rect {
         return new Point(this.x + this.width, this.y + this.height)
     }
 
-    translate(offset : Point | number, offsetY : number = 0) {
+    translate(offset: { x: number, y: number } | number, offsetY: number = 0) {
         if (typeof offset == "object") {
             return new Rect(this.x + offset.x, this.y + offset.y, this.width, this.height)
         } else {
