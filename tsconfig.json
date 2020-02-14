@@ -1,10 +1,10 @@
 {
     "compilerOptions": {
         "incremental": true,
-        "target": "ES3",
+        "target": "es6",
         "sourceMap": true,
         "lib": [ "es6", "dom", "dom.iterable" ],
-        "module": "CommonJS",
+        "module": "ES6",
         "outDir": "build"
     }
 }
