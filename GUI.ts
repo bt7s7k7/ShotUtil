@@ -49,7 +49,7 @@ export class Point {
     }
 
     mul(amount: number) {
-        return new Rect(this.x * amount, this.y * amount)
+        return new Point(this.x * amount, this.y * amount)
     }
 }
 
