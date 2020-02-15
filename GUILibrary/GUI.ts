@@ -81,7 +81,7 @@ export class GUIControl {
             this.parent.children.splice(this.parent.children.indexOf(this), 1)
     }
 
-    getScreenRect(offset: Point) : Rect {
+    getScreenRect(offset: Point): Rect {
         return this.rect.translate(offset).translate(this.parent ? this.parent.getScreenRect(new Point()) : 0, 0)
     }
 
@@ -118,12 +118,19 @@ export class CanvasGUI {
         var currOffset = this.offset.copy()
         if (this.centerCoords) currOffset = currOffset.add(size.mul(0.5).end())
 
-        this.drawControl(this.root, currOffset)
+        this.visitControls(this.root, v=>v.draw(currOffset, this.ctx))
     }
 
-    drawControl(control: GUIControl, offset: Point) {
-        control.draw(offset, this.ctx)
-        control.getChildren().forEach(v => this.drawControl(v, offset))
+    visitControls(control: GUIControl, callback: (control: GUIControl) => void) {
+        callback(control)
+
+        control.getChildren().forEach(v => this.visitControls(v, callback))
+    }
+
+    visitControlsReverse(control: GUIControl, callback: (control: GUIControl) => void) {
+        control.getChildren().slice().reverse().forEach(v => this.visitControls(v, callback))
+
+        callback(control)
     }
 
     addControl(control: GUIControl) {
