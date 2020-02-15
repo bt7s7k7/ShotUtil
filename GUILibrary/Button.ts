@@ -12,7 +12,7 @@ export class Button extends GUIControl {
         ctx.fillStyle = this.over ? (this.down ? this.fillDown : this.fillHover) : this.fill
         ctx.strokeStyle = this.over ? (this.down ? this.strokeDown : this.strokeHover) : this.stroke
 
-        var baseRect = this.rect.translate(offset)
+        var baseRect = this.getScreenRect(offset)
 
         ctx.fillRect(...baseRect.spread())
         ctx.strokeRect(...baseRect.spread())

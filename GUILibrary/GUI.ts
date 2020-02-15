@@ -81,6 +81,10 @@ export class GUIControl {
             this.parent.children.splice(this.parent.children.indexOf(this), 1)
     }
 
+    getScreenRect(offset: Point) : Rect {
+        return this.rect.translate(offset).translate(this.parent ? this.parent.getScreenRect(new Point()) : 0, 0)
+    }
+
     append(control: GUIControl) {
         control.remove()
         control.parent = this
@@ -89,7 +93,7 @@ export class GUIControl {
 
     draw(offset: Point, ctx: CanvasRenderingContext2D) {
         ctx.strokeStyle = "white"
-        ctx.strokeRect(...this.rect.translate(offset).spread())
+        ctx.strokeRect(...this.getScreenRect(offset).spread())
     }
 
     getParent() { return this.parent }
