@@ -106,7 +106,7 @@ export class CanvasGUI {
     public centerCoords: boolean = false
     protected root: GUIControl = new GUIControl()
 
-    constructor(public canvas: HTMLCanvasElement) {
+    constructor(protected canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d", { alpha: true })
     }
 
