@@ -72,6 +72,9 @@ export class GUIControl {
     protected parent: GUIControl = null
     protected children: GUIControl[] = []
     public rect: Rect = new Rect()
+    public over = false
+    public down = false
+    public delta = new Point()
 
     remove() {
         if (this.parent)
