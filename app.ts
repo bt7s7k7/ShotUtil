@@ -10,7 +10,12 @@ gui.centerCoords = true
 {
     let control = new Button()
     gui.addControl(control)
-    control.rect = new Rect(-10, -10, 20, 20)
+    control.rect = new Rect(-20, -20, 40, 40)
+}
+{
+    let control = new Button()
+    gui.addControl(control)
+    control.rect = new Rect(0, 0, 40, 40)
 }
 
 function update() {
