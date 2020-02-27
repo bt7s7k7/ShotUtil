@@ -141,6 +141,10 @@ export class CanvasGUI {
         canvas.addEventListener("mousemove", (event) => {
             this.mousePos = new Point(event.x, event.y)
         })
+
+        canvas.addEventListener("contextmenu", (event)=>{
+            event.preventDefault()
+        })
     }
 
     update() {
