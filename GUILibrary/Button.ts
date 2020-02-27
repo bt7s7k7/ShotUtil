@@ -1,4 +1,4 @@
-import { GUIControl, Point, IControlMouseState } from "./GUI.js"
+import { GUIControl, Point, IControlMouseState, ButtonState } from "./GUI.js"
 
 export class Button extends GUIControl {
     public fill = "#ffffff"
@@ -7,6 +7,7 @@ export class Button extends GUIControl {
     public strokeHover = "#00ffff"
     public fillDown = "#aaaaaa"
     public strokeDown = "#00ffff"
+    public buttonToListenTo = 0
 
     draw(offset: Point, ctx: CanvasRenderingContext2D) {
         this.setStyles(ctx)
@@ -19,11 +20,16 @@ export class Button extends GUIControl {
 
     setMouseState(state: IControlMouseState) {
         super.setMouseState(state)
-        if (state.click[0]) this.onClick()
+        if (state.click[this.buttonToListenTo]) this.onClick()
+        if (state.down[this.buttonToListenTo]) this.onDrag(state.delta)
         return true
     }
 
     protected onClick() {
+        // To override
+    }
+
+    protected onDrag(delta: Point) {
         // To override
     }
 

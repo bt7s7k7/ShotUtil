@@ -1,5 +1,6 @@
 import { CanvasGUI, GUIControl, Rect } from "./GUILibrary/GUI.js"
 import { Button } from "./GUILibrary/Button.js"
+import { Draggable } from "./GUILibrary/Draggable.js"
 
 var canvas = document.getElementById("canvas") as HTMLCanvasElement
 
@@ -13,7 +14,7 @@ gui.centerCoords = true
     control.rect = new Rect(-20, -20, 40, 40)
 }
 {
-    let control = new Button()
+    let control = new Draggable()
     gui.addControl(control)
     control.rect = new Rect(0, 0, 40, 40)
 }
