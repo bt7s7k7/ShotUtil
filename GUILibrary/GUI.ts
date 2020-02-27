@@ -1,4 +1,12 @@
 export class Rect {
+    size() {
+        return new Point(this.width, this.height)
+    }
+
+    pos() {
+        return new Point(this.x, this.y)
+    }
+
     makePixelPerfect(): Rect {
         return new Rect(Math.floor(this.x) + 0.5, Math.floor(this.y) + 0.5, Math.floor(this.width), Math.floor(this.height))
     }
@@ -37,6 +45,14 @@ export class Rect {
         }
     }
 
+    expand(offset: { x: number, y: number } | number, offsetY: number = 0) {
+        if (typeof offset == "object") {
+            return new Rect(this.x, this.y, this.width + offset.x, this.height + offset.y)
+        } else {
+            return new Rect(this.x, this.y, this.width + offset, this.height + offsetY)
+        }
+    }
+
     copy() {
         return new Rect(this.x, this.y, this.width, this.height)
     }
@@ -47,6 +63,12 @@ export class Rect {
 }
 
 export class Point {
+    scale(other: { x: number, y: number } | number, otherY: number = 0) {
+        if (typeof other == "object")
+            return new Point(this.x * other.x, this.y * other.y)
+        else
+            return new Point(this.x * other, this.y * otherY)
+    }
     public x: number;
     constructor(x: number | { x: number, y: number } = 0, public y = 0) {
         if (typeof x == "object") {
@@ -202,7 +224,7 @@ export class CanvasGUI {
     }
 
     visitControlsReverse(control: GUIControl, callback: (control: GUIControl) => void) {
-        control.getChildren().slice().reverse().forEach(v => this.visitControls(v, callback))
+        control.getChildren().slice().reverse().forEach(v => this.visitControlsReverse(v, callback))
 
         callback(control)
     }

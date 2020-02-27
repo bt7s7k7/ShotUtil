@@ -25,11 +25,11 @@ export class Button extends GUIControl {
         return true
     }
 
-    protected onClick() {
+    onClick() {
         // To override
     }
 
-    protected onDrag(delta: Point) {
+    onDrag(delta: Point) {
         // To override
     }
 
