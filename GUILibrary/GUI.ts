@@ -1,4 +1,7 @@
 export class Rect {
+    makePixelPerfect(): Rect {
+        return new Rect(Math.floor(this.x) + 0.5, Math.floor(this.y) + 0.5, Math.floor(this.width), Math.floor(this.height))
+    }
     public x: number;
 
     constructor(x: number | { x: number, y: number, width: number, height: number } = 0, public y = 0, public width = 0, public height = 0) {
@@ -92,7 +95,7 @@ export class GUIControl {
     }
 
     getScreenRect(offset: Point): Rect {
-        return this.rect.translate(offset).translate(this.parent ? this.parent.getScreenRect(new Point()) : 0, 0)
+        return this.rect.translate(offset).translate(this.parent ? this.parent.getScreenRect(new Point()) : 0, 0).makePixelPerfect()
     }
 
     append(control: GUIControl) {
