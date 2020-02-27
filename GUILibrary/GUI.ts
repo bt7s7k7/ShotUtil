@@ -145,7 +145,7 @@ export class CanvasGUI {
             this.mousePos = new Point(event.x, event.y)
         })
 
-        canvas.addEventListener("contextmenu", (event)=>{
+        canvas.addEventListener("contextmenu", (event) => {
             event.preventDefault()
         })
     }
@@ -170,7 +170,7 @@ export class CanvasGUI {
                 over = this.selectedControl == control || (this.selectedControl == null && control.getScreenRect(currOffset).isPointInside(this.mousePos))
                 down = this.mouseDown.map(v => v && over) as ButtonState
                 if (over) delta = this.mousePos.add(this.lastMousePos.mul(-1))
-                click = down.map((v,i)=>v && !this.wasMouseDown[i]) as ButtonState
+                click = down.map((v, i) => v && !this.wasMouseDown[i]) as ButtonState
             }
 
             var hit = control.setMouseState({
