@@ -74,17 +74,17 @@ export class Point {
 
 export interface IControlMouseState {
     over: boolean;
-    down: boolean;
+    down: ButtonState;
     delta: Point;
     pos: Point;
-    click: boolean;
+    click: ButtonState;
 }
 
 export class GUIControl {
     protected parent: GUIControl = null
     protected children: GUIControl[] = []
     public rect: Rect = new Rect()
-    public mouseState: IControlMouseState = { click: false, delta: new Point(), down: false, over: false, pos: new Point() }
+    public mouseState: IControlMouseState = { click: defaultButtonsState(), delta: new Point(), down: defaultButtonsState(), over: false, pos: new Point() }
 
     remove() {
         if (this.parent)
@@ -115,13 +115,16 @@ export class GUIControl {
     getChildren() { return this.children }
 }
 
+export type ButtonState = [boolean, boolean, boolean, boolean, boolean]
+export function defaultButtonsState() { return [false, false, false, false, false] as ButtonState }
+
 export class CanvasGUI {
     protected ctx: CanvasRenderingContext2D
     public offset: Point = new Point()
     public centerCoords: boolean = false
     protected root: GUIControl = new GUIControl()
-    protected mouseDown = false
-    protected wasMouseDown = false
+    protected mouseDown = defaultButtonsState()
+    protected wasMouseDown = defaultButtonsState()
     protected mousePos = new Point()
     protected lastMousePos = new Point()
     protected selectedControl: GUIControl = null
@@ -129,11 +132,11 @@ export class CanvasGUI {
     constructor(protected canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d", { alpha: true })
 
-        canvas.addEventListener("mousedown", () => {
-            this.mouseDown = true
+        canvas.addEventListener("mousedown", (event) => {
+            this.mouseDown[event.button] = true
         })
-        canvas.addEventListener("mouseup", () => {
-            this.mouseDown = false
+        canvas.addEventListener("mouseup", (event) => {
+            this.mouseDown[event.button] = false
         })
         canvas.addEventListener("mousemove", (event) => {
             this.mousePos = new Point(event.x, event.y)
@@ -152,15 +155,15 @@ export class CanvasGUI {
 
         this.visitControlsReverse(this.root, control => {
             var over = false
-            var down = false
+            var down = defaultButtonsState()
             var delta = new Point()
-            var click = false
+            var click = defaultButtonsState()
 
             if (!handled) {
                 over = this.selectedControl == control || (this.selectedControl == null && control.getScreenRect(currOffset).isPointInside(this.mousePos))
-                down = over && this.mouseDown
+                down = this.mouseDown.map(v => v && over) as ButtonState
                 if (over) delta = this.mousePos.add(this.lastMousePos.mul(-1))
-                click = down && !this.wasMouseDown
+                click = down.map((v,i)=>v && !this.wasMouseDown[i]) as ButtonState
             }
 
             var hit = control.setMouseState({
@@ -181,8 +184,8 @@ export class CanvasGUI {
         this.visitControls(this.root, v => v.draw(currOffset, this.ctx))
 
         this.lastMousePos = this.mousePos
-        this.wasMouseDown = this.mouseDown
-        if (!this.mouseDown) this.selectedControl = null
+        this.wasMouseDown = [...this.mouseDown] as ButtonState
+        if (!this.mouseDown[0]) this.selectedControl = null
     }
 
     visitControls(control: GUIControl, callback: (control: GUIControl) => void) {

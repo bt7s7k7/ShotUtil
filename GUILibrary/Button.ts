@@ -17,9 +17,9 @@ export class Button extends GUIControl {
         ctx.strokeRect(...baseRect.spread())
     }
 
-    setMouseState(state : IControlMouseState) {
+    setMouseState(state: IControlMouseState) {
         super.setMouseState(state)
-        if (state.click) this.onClick()
+        if (state.click[0]) this.onClick()
         return true
     }
 
@@ -28,7 +28,8 @@ export class Button extends GUIControl {
     }
 
     protected setStyles(ctx: CanvasRenderingContext2D) {
-        ctx.fillStyle = this.mouseState.over ? (this.mouseState.down ? this.fillDown : this.fillHover) : this.fill
-        ctx.strokeStyle = this.mouseState.over ? (this.mouseState.down ? this.strokeDown : this.strokeHover) : this.stroke
+        const down = this.mouseState.down.reduce((p, c) => p || c)
+        ctx.fillStyle = this.mouseState.over ? (down ? this.fillDown : this.fillHover) : this.fill
+        ctx.strokeStyle = this.mouseState.over ? (down ? this.strokeDown : this.strokeHover) : this.stroke
     }
 }
