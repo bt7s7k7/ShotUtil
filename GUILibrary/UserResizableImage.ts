@@ -7,6 +7,8 @@ export class UserResizableImage extends UserResizable {
 
     draw(offset: Point, ctx: CanvasRenderingContext2D) {
         var screenRect = this.getScreenRect(offset)
+        screenRect.x = Math.floor(screenRect.x)
+        screenRect.y = Math.floor(screenRect.y)
         ctx.drawImage(this.image, screenRect.x, screenRect.y, screenRect.width, screenRect.height)
         super.draw(offset, ctx)
     }
