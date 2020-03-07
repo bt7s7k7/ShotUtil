@@ -34,23 +34,34 @@
             font-family: 'Lucida Console', 'Courier New', Courier, monospace;
             font-size: small;
         }
+
+        #cropCanvas {
+            background-color: rgba(0, 0, 0, 0.75);
+        }
     </style>
 </head>
 
 <body>
     <div class="help">
-        Paste file or screenshot to add image<br>
-        Q / Delete - Delete<br>
-        X - Delete All<br>
-        W - To Front<br>
-        S - To Back<br>
-        D - Duplicate<br>
-        C - Crop Image<br>
-        Ctrl + C - Copy All<br>
-        F - Save<br>
+        <span id="normalControls">
+            Paste file or screenshot to add image<br>
+            Q / Delete - Delete<br>
+            X - Delete All<br>
+            W - To Front<br>
+            S - To Back<br>
+            D - Duplicate<br>
+            C - Crop Image<br>
+            Ctrl + C - Copy All<br>
+            F - Save<br>
+        </span>
+        <span id="cropControls" hidden>
+            Enter / Esc / C - Done<br>
+            Q - Reset<br>
+        </span>
     </div>
     <canvas id="canvas" class="page"></canvas>
     <input id="pasteTarget">
+    <canvas id="cropCanvas" class="page" hidden></canvas>
 </body>
 
 </html>

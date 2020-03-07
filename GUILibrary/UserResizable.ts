@@ -39,27 +39,19 @@ export class UserResizable extends Draggable {
     }
 
     setMouseState(state: IControlMouseState) {
-        if (state.down[this.buttonToListenTo]) this.selectionManager.select(this)
+        if (this.selectionManager && state.down[this.buttonToListenTo]) this.selectionManager.select(this)
         return super.setMouseState(state)
     }
 
     resize(tX: number, tY: number, oW: number, oH: number) {
         var aspectRatio = this.rect.width / this.rect.height
-        /*if (this.preserveAspectRatio) {
-            let noW = oH * aspectRatio
-            let noH = oW / aspectRatio
-
-            if (Math.abs(noW) > Math.abs(noH)) {
-                oW = oH = noW
-            } else {
-                oW = oH = noH
-            }
-        }*/
         var orig = this.rect.size()
         this.rect = this.rect.expand(oW, oH)
 
-        this.rect.width = this.rect.height * aspectRatio
-
+        if (this.preserveAspectRatio) {
+            this.rect.width = this.rect.height * aspectRatio
+        }
+        
         this.rect = this.rect.translate(this.rect.size().add(orig.mul(-1)).scale(tX, tY))
     }
 
@@ -90,18 +82,18 @@ export class UserResizable extends Draggable {
         this.selectionManager = manager
         this.blur()
     }
-    
-        copy() {
-            var copy = new (this as any).constructor() as UserResizable
-            var children = copy.children
-            Object.assign(copy, this)
-            copy.children = children
-            copy.parent = null
-    
-            copy.rect = this.rect.translate(20, 20)
 
-            return copy
-        }
+    copy() {
+        var copy = new (this as any).constructor() as UserResizable
+        var children = copy.children
+        Object.assign(copy, this)
+        copy.children = children
+        copy.parent = null
+
+        copy.rect = this.rect.translate(20, 20)
+
+        return copy
+    }
 }
 
 export class ResizableSelectionManager {
