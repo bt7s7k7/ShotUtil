@@ -4,12 +4,26 @@ import { Point, Rect } from "./GUI.js";
 export class UserResizableImage extends UserResizable {
     protected image: CanvasImageSource
     public cropRect: Rect
+    public scale = new Point(1, 1)
 
     draw(offset: Point, ctx: CanvasRenderingContext2D) {
         var screenRect = this.getScreenRect(offset)
         screenRect.x = Math.floor(screenRect.x)
         screenRect.y = Math.floor(screenRect.y)
-        ctx.drawImage(this.image, this.cropRect.x, this.cropRect.y, this.cropRect.width, this.cropRect.height, screenRect.x, screenRect.y, screenRect.width, screenRect.height)
+        ctx.save()
+        ctx.scale(...this.scale.spread())
+        ctx.drawImage(
+            this.image,
+            this.cropRect.x,
+            this.cropRect.y,
+            this.cropRect.width,
+            this.cropRect.height,
+            screenRect.x * this.scale.x,
+            screenRect.y * this.scale.y,
+            screenRect.width * this.scale.x,
+            screenRect.height * this.scale.y
+        )
+        ctx.restore()
         super.draw(offset, ctx)
     }
 

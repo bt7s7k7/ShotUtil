@@ -83,6 +83,7 @@ pasteTarget.addEventListener("paste", (event) => {
             control.setImage(image)
             control.focus()
             control.registerManager(selectionManager)
+            control.preserveAspectRatio = true
             selectionManager.select(control)
             gui.addControl(control)
         })
@@ -160,6 +161,10 @@ window.addEventListener("keydown", event => {
 
                 selected.blur()
             }
+        } else if (event.key == "t") {
+            if (selected) (selected as UserResizableImage).scale.y *= -1
+        } else if (event.key == "g") {
+            if (selected) (selected as UserResizableImage).scale.x *= -1
         }
     }
 })
