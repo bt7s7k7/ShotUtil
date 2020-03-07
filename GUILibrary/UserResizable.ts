@@ -1,9 +1,21 @@
 import { Draggable } from "./Draggable.js";
-import { Point, Rect } from "./GUI.js";
-import { Button } from "./Button.js";
+import { Point, Rect, IControlMouseState } from "./GUI.js";
+import { Button, defaultButtonStyle, IButtonStyle } from "./Button.js";
+
+export interface IUserResizableStyle {
+    stroke: string,
+    buttonStyle: IButtonStyle
+}
+
+export const defaultUserResizableStyle = {
+    stroke: "#ffffff",
+    buttonStyle: defaultButtonStyle
+} as IUserResizableStyle
+
 
 export class UserResizable extends Draggable {
     public preserveAspectRatio = false
+    protected style = defaultUserResizableStyle
     constructor() {
         super()
         this.append(new Button())
@@ -23,6 +35,12 @@ export class UserResizable extends Draggable {
         buttonChildren[2].onDrag = function (delta) { this.parent.resize(0, 0, delta.x, delta.y) }
         buttonChildren[3].onDrag = function (delta) { this.parent.resize(-1, 0, -delta.x, delta.y) }
 
+        this.setStyle(this.style)
+    }
+
+    setMouseState(state: IControlMouseState) {
+        if (state.down[this.buttonToListenTo]) this.selectionManager.select(this)
+        return super.setMouseState(state)
     }
 
     resize(tX: number, tY: number, oW: number, oH: number) {
@@ -43,5 +61,48 @@ export class UserResizable extends Draggable {
         this.rect.width = this.rect.height * aspectRatio
 
         this.rect = this.rect.translate(this.rect.size().add(orig.mul(-1)).scale(tX, tY))
+    }
+
+    setStyle(style: IUserResizableStyle) {
+        this.style = style
+        this.children.forEach(v => (v as Button).style = this.style.buttonStyle)
+    }
+
+    protected focused = true
+
+    draw(offset: Point, ctx: CanvasRenderingContext2D) {
+        if (this.focused) ctx.strokeRect(...this.getScreenRect(offset).spread())
+    }
+
+    focus() {
+        this.children.forEach(v => v.enabled = true)
+        this.focused = true
+    }
+
+    blur() {
+        this.children.forEach(v => v.enabled = false)
+        this.focused = false
+
+    }
+
+    public selectionManager: ResizableSelectionManager
+    registerManager(manager: ResizableSelectionManager) {
+        this.selectionManager = manager
+        this.blur()
+    }
+}
+
+export class ResizableSelectionManager {
+    protected selected: UserResizable
+
+    deselect() {
+        this.selected?.blur()
+        this.selected = null
+    }
+
+    select(target: UserResizable) {
+        this.selected?.blur()
+        this.selected = target
+        target.focus()
     }
 }

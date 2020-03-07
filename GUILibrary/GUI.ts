@@ -110,6 +110,7 @@ export class GUIControl {
     protected children: GUIControl[] = []
     public rect: Rect = new Rect()
     public mouseState: IControlMouseState = { click: defaultButtonsState(), delta: new Point(), down: defaultButtonsState(), over: false, pos: new Point() }
+    public enabled = true
 
     remove() {
         if (this.parent)
@@ -218,12 +219,14 @@ export class CanvasGUI {
     }
 
     visitControls(control: GUIControl, callback: (control: GUIControl) => void) {
+        if (!control.enabled) return
         callback(control)
-
+        
         control.getChildren().forEach(v => this.visitControls(v, callback))
     }
-
+    
     visitControlsReverse(control: GUIControl, callback: (control: GUIControl) => void) {
+        if (!control.enabled) return
         control.getChildren().slice().reverse().forEach(v => this.visitControlsReverse(v, callback))
 
         callback(control)
