@@ -39,9 +39,6 @@
             background-color: rgba(0, 0, 0, 0.75);
         }
 
-        #output {
-            object-fit: contain;
-        }
     </style>
 </head>
 
@@ -55,7 +52,6 @@
             S - To Back<br>
             D - Duplicate<br>
             C - Crop Image<br>
-            F - Export<br>
             T - Flip Verically<br>
             G - Flip Horizontally<br>
         </span>
@@ -65,9 +61,9 @@
         </span>
     </div>
     <canvas id="canvas" class="page"></canvas>
+    <img id="output" class="page" style="opacity: 0;">
     <input id="pasteTarget">
     <canvas id="cropCanvas" class="page" hidden></canvas>
-    <img id="output" class="page" onclick="this.hidden = true" hidden>
 </body>
 
 </html>

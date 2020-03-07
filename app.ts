@@ -23,6 +23,14 @@ var scaleY = 0
 
 var outputImage = document.getElementById("output") as HTMLImageElement
 
+outputImage.addEventListener("contextmenu", () => {
+    outputImage.src = renderOutput()
+})
+
+outputImage.addEventListener("drag", event => event.preventDefault())
+outputImage.addEventListener("dragstart", event => event.preventDefault())
+outputImage.addEventListener("dragend", event => event.preventDefault())
+
 cropGUI.onBackgroundMouse = (state) => {
     if (cropImageControl && state.down[0]) {
         cropImageControl.rect = cropImageControl.rect.translate(state.delta)
@@ -33,7 +41,7 @@ var normalControls = document.getElementById("normalControls")
 var cropControls = document.getElementById("cropControls")
 
 var gui = new CanvasGUI()
-gui.registerListeners(canvas)
+gui.registerListeners(outputImage)
 window["gui"] = gui
 gui.centerCoords = true
 
@@ -43,6 +51,7 @@ gui.onBackgroundMouse = state => {
     }
 }
 registerMouseMovement(gui, 0)
+outputImage.src = renderOutput()
 
 function update() {
     var size = new Rect(canvas.getBoundingClientRect()).origin()
@@ -194,9 +203,6 @@ window.addEventListener("keydown", event => {
             if (selected) (selected as UserResizableImage).scale.y *= -1
         } else if (event.code == "KeyG") {
             if (selected) (selected as UserResizableImage).scale.x *= -1
-        } else if (event.code == "KeyF") {
-            outputImage.hidden = false
-            outputImage.src = renderOutput()
         }
     }
 })

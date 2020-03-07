@@ -165,19 +165,15 @@ export class CanvasGUI {
     protected lastMousePos = new Point()
     protected selectedControl: GUIControl | "bg" = null
 
-    registerListeners(canvas: HTMLCanvasElement) {
-        canvas.addEventListener("mousedown", (event) => {
+    registerListeners(target: HTMLElement) {
+        target.addEventListener("mousedown", (event) => {
             this.mouseDown[event.button] = true
         })
-        canvas.addEventListener("mouseup", (event) => {
+        target.addEventListener("mouseup", (event) => {
             this.mouseDown[event.button] = false
         })
-        canvas.addEventListener("mousemove", (event) => {
+        target.addEventListener("mousemove", (event) => {
             this.mousePos = new Point(event.x, event.y)
-        })
-
-        canvas.addEventListener("contextmenu", (event) => {
-            event.preventDefault()
         })
     }
 
@@ -254,14 +250,14 @@ export class CanvasGUI {
             }
         }
 
-        
+
         this.lastMousePos = this.mousePos
         this.wasMouseDown = [...this.mouseDown] as ButtonState
         if (!this.mouseDown[0]) this.selectedControl = null
 
         return currOffset
     }
-    
+
     draw(ctx: CanvasRenderingContext2D, currOffset: Point) {
         var canvas = ctx.canvas
         var size = new Rect(0, 0, canvas.width, canvas.height)
