@@ -21,6 +21,8 @@ var cropImageControl = null as ImageControl
 var scaleX = 0
 var scaleY = 0
 
+var outputImage = document.getElementById("output") as HTMLImageElement
+
 cropGUI.onBackgroundMouse = (state) => {
     if (cropImageControl && state.down[0]) {
         cropImageControl.rect = cropImageControl.rect.translate(state.delta)
@@ -91,10 +93,37 @@ pasteTarget.addEventListener("paste", (event) => {
     })
 })
 
+function renderOutput() {
+    var selected = selectionManager.getSelected()
+    if (selected) selected.blur()
+    var oldOffset = gui.offset
+    gui.offset = new Point(0, 0)
+    gui.centerCoords = false
+    var offset = gui.update(ctx)
+    var rect = getOutputRect(offset)
+
+    var outCanvas = document.createElement("canvas")
+    var outCtx = outCanvas.getContext("2d")
+
+    outCanvas.width = rect.width//rect.width - 2
+    outCanvas.height = rect.height//rect.height - 2
+
+    //rect = rect.translate(offset)
+
+    gui.draw(outCtx, new Point(rect).mul(-1))
+
+    gui.offset = oldOffset
+    gui.centerCoords = true
+    if (selected) selected.focus()
+
+    return outCanvas.toDataURL()
+}
+
 window.addEventListener("keydown", event => {
+    if (event.ctrlKey || event.metaKey || event.shiftKey) return
     const selected = selectionManager.getSelected()
     if (cropRect) {
-        if (event.key == "Enter" || event.key == "Escape" || event.key == "c") {
+        if (event.code == "Enter" || event.code == "Escape" || event.code == "KeyC") {
             normalControls.hidden = false
             cropControls.hidden = true
             cropCanvas.hidden = true
@@ -106,25 +135,25 @@ window.addEventListener("keydown", event => {
             cropRect = null
             cropImageControl.remove()
             cropImageControl = null
-        } else if (event.key == "q") {
+        } else if (event.code == "KeyQ") {
             cropRect.rect = cropImageControl.rect
         }
     } else {
-        if (event.key == "Delete" || event.key == "q") {
+        if (event.code == "Delete" || event.code == "KeyQ") {
             selected?.remove()
-        } else if (event.key == "w") {
+        } else if (event.code == "KeyW") {
             selected?.toFront()
-        } else if (event.key == "s") {
+        } else if (event.code == "KeyS") {
             selected?.toBack()
-        } else if (event.key == "d") {
+        } else if (event.code == "KeyD") {
             if (selected) {
                 const copy = selected.copy()
                 selectionManager.select(copy)
                 gui.addControl(copy)
             }
-        } else if (event.key == "x") {
+        } else if (event.code == "KeyX") {
             gui.getControls().slice().forEach(v => v.remove())
-        } else if (event.key == "c") {
+        } else if (event.code == "KeyC") {
             if (selected) {
                 cropCanvas.hidden = false
                 normalControls.hidden = true
@@ -161,10 +190,13 @@ window.addEventListener("keydown", event => {
 
                 selected.blur()
             }
-        } else if (event.key == "t") {
+        } else if (event.code == "KeyT") {
             if (selected) (selected as UserResizableImage).scale.y *= -1
-        } else if (event.key == "g") {
+        } else if (event.code == "KeyG") {
             if (selected) (selected as UserResizableImage).scale.x *= -1
+        } else if (event.code == "KeyF") {
+            outputImage.hidden = false
+            outputImage.src = renderOutput()
         }
     }
 })

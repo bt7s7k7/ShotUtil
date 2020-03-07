@@ -38,6 +38,10 @@
         #cropCanvas {
             background-color: rgba(0, 0, 0, 0.75);
         }
+
+        #output {
+            object-fit: contain;
+        }
     </style>
 </head>
 
@@ -51,8 +55,7 @@
             S - To Back<br>
             D - Duplicate<br>
             C - Crop Image<br>
-            Ctrl + C - Copy All<br>
-            F - Save<br>
+            F - Export<br>
             T - Flip Verically<br>
             G - Flip Horizontally<br>
         </span>
@@ -64,6 +67,7 @@
     <canvas id="canvas" class="page"></canvas>
     <input id="pasteTarget">
     <canvas id="cropCanvas" class="page" hidden></canvas>
+    <img id="output" class="page" onclick="this.hidden = true" hidden>
 </body>
 
 </html>
