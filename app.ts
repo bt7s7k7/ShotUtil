@@ -1,4 +1,4 @@
-import { CanvasGUI } from "./GUILibrary/GUI.js"
+import { CanvasGUI, Rect } from "./GUILibrary/GUI.js"
 import { ResizableSelectionManager } from "./GUILibrary/UserResizable.js"
 import { UserResizableImage } from "./GUILibrary/UserResizableImage.js"
 
@@ -11,6 +11,10 @@ window["gui"] = gui
 gui.centerCoords = true
 
 function update() {
+    var size = new Rect(canvas.getBoundingClientRect()).origin()
+    canvas.width = size.width
+    canvas.height = size.height
+    
     gui.update()
     pasteTarget.focus()
     pasteTarget.value = ""

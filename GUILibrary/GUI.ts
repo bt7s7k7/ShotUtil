@@ -185,9 +185,7 @@ export class CanvasGUI {
     }
 
     update() {
-        var size = new Rect(this.canvas.getBoundingClientRect()).origin()
-        this.canvas.width = size.width
-        this.canvas.height = size.height
+        var size = new Rect(0, 0, this.canvas.width, this.canvas.height)
 
         var currOffset = this.offset.copy()
         if (this.centerCoords) currOffset = currOffset.add(size.mul(0.5).end())
