@@ -139,6 +139,17 @@ export class GUIControl {
 
     getParent() { return this.parent }
     getChildren() { return this.children }
+
+    toBack() {
+        if (!this.parent) return;
+        this.parent.children.splice(this.parent.children.indexOf(this), 1)
+        this.parent.children.splice(0, 0, this)
+    }
+    toFront() {
+        if (!this.parent) return;
+        this.parent.children.splice(this.parent.children.indexOf(this), 1)
+        this.parent.children.push(this)
+    }
 }
 
 export type ButtonState = [boolean, boolean, boolean, boolean, boolean]
@@ -221,10 +232,10 @@ export class CanvasGUI {
     visitControls(control: GUIControl, callback: (control: GUIControl) => void) {
         if (!control.enabled) return
         callback(control)
-        
+
         control.getChildren().forEach(v => this.visitControls(v, callback))
     }
-    
+
     visitControlsReverse(control: GUIControl, callback: (control: GUIControl) => void) {
         if (!control.enabled) return
         control.getChildren().slice().reverse().forEach(v => this.visitControlsReverse(v, callback))

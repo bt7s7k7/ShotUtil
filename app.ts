@@ -20,10 +20,10 @@ function update() {
 
 pasteTarget.addEventListener("paste", (event) => {
     var files = [...event.clipboardData.files]
-    files.forEach(v=>{
+    files.forEach(v => {
         var url = URL.createObjectURL(v)
         var image = new Image()
-        image.addEventListener("load", ()=>{
+        image.addEventListener("load", () => {
             var control = new UserResizableImage()
             control.setImage(image)
             control.focus()
@@ -33,6 +33,23 @@ pasteTarget.addEventListener("paste", (event) => {
         })
         image.src = url
     })
+})
+
+window.addEventListener("keydown", event => {
+    const selected = selectionManager.getSelected()
+    if (event.key == "Delete" || event.key == "q") {
+        selected?.remove()
+    } else if (event.key == "w") {
+        selected?.toFront()
+    } else if (event.key == "s") {
+        selected?.toBack()
+    } else if (event.key == "d") {
+        if (selected) {
+            const copy = selected.copy()
+            selectionManager.select(copy)
+            gui.addControl(copy)
+        }
+    }
 })
 
 update()

@@ -90,6 +90,18 @@ export class UserResizable extends Draggable {
         this.selectionManager = manager
         this.blur()
     }
+    
+        copy() {
+            var copy = new (this as any).constructor() as UserResizable
+            var children = copy.children
+            Object.assign(copy, this)
+            copy.children = children
+            copy.parent = null
+    
+            copy.rect = this.rect.translate(20, 20)
+
+            return copy
+        }
 }
 
 export class ResizableSelectionManager {
@@ -104,5 +116,9 @@ export class ResizableSelectionManager {
         this.selected?.blur()
         this.selected = target
         target.focus()
+    }
+
+    getSelected() {
+        return this.selected
     }
 }
