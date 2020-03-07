@@ -164,7 +164,7 @@ export class CanvasGUI {
     protected wasMouseDown = defaultButtonsState()
     protected mousePos = new Point()
     protected lastMousePos = new Point()
-    protected selectedControl: GUIControl = null
+    protected selectedControl: GUIControl | "bg" = null
 
     constructor(protected canvas: HTMLCanvasElement) {
         this.ctx = canvas.getContext("2d", { alpha: true })
@@ -186,6 +186,10 @@ export class CanvasGUI {
 
     getControls() {
         return this.root.getChildren()
+    }
+
+    onBackgroundMouse(state: IControlMouseState) {
+        // To override
     }
 
     update() {
@@ -223,6 +227,34 @@ export class CanvasGUI {
                 handled = true
             }
         })
+
+        {
+            let over = false
+            let down = defaultButtonsState()
+            let delta = new Point()
+            let click = defaultButtonsState()
+
+            if (!handled) {
+                over = this.selectedControl == "bg" || this.selectedControl == null
+                down = this.mouseDown.map(v => v && over) as ButtonState
+                if (over) delta = this.mousePos.add(this.lastMousePos.mul(-1))
+                click = down.map((v, i) => v && !this.wasMouseDown[i]) as ButtonState
+            }
+
+            this.onBackgroundMouse({
+                over,
+                down,
+                delta,
+                pos: this.mousePos,
+                click
+            })
+
+            if (over) {
+                if (this.selectedControl == null) this.selectedControl = "bg"
+
+                handled = true
+            }
+        }
 
         this.visitControls(this.root, v => v.draw(currOffset, this.ctx))
 

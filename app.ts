@@ -1,6 +1,7 @@
 import { CanvasGUI, Rect } from "./GUILibrary/GUI.js"
 import { ResizableSelectionManager } from "./GUILibrary/UserResizable.js"
 import { UserResizableImage } from "./GUILibrary/UserResizableImage.js"
+import { registerMouseMovement } from "./GUILibrary/mouseMovement.js"
 
 var canvas = document.getElementById("canvas") as HTMLCanvasElement
 var pasteTarget = document.getElementById("pasteTarget") as HTMLInputElement
@@ -9,6 +10,13 @@ var selectionManager = new ResizableSelectionManager()
 var gui = new CanvasGUI(canvas)
 window["gui"] = gui
 gui.centerCoords = true
+
+gui.onBackgroundMouse = state=>{
+    if(state.down[0]) {
+        selectionManager.deselect()
+    }
+}
+registerMouseMovement(gui, 0)
 
 function update() {
     var size = new Rect(canvas.getBoundingClientRect()).origin()
