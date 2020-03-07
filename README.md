@@ -1,4 +1,5 @@
-# ShotUtil
+# ShotUtil [![Netlify Status](https://api.netlify.com/api/v1/badges/070f5174-4bad-4ed6-ba71-0e7aa45109ae/deploy-status)](https://shotutil.netlify.com/)
+
 Quick screenshot editing tool. Allows for:
 
 - Resizing and arrangement
