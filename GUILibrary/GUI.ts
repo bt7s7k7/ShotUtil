@@ -184,6 +184,10 @@ export class CanvasGUI {
         })
     }
 
+    getControls() {
+        return this.root.getChildren()
+    }
+
     update() {
         var size = new Rect(0, 0, this.canvas.width, this.canvas.height)
 

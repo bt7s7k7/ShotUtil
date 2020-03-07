@@ -14,7 +14,7 @@ function update() {
     var size = new Rect(canvas.getBoundingClientRect()).origin()
     canvas.width = size.width
     canvas.height = size.height
-    
+
     gui.update()
     pasteTarget.focus()
     pasteTarget.value = ""
@@ -53,6 +53,8 @@ window.addEventListener("keydown", event => {
             selectionManager.select(copy)
             gui.addControl(copy)
         }
+    } else if (event.key == "x") {
+        gui.getControls().slice().forEach(v => v.remove())
     }
 })
 
