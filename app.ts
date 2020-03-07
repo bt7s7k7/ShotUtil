@@ -97,6 +97,8 @@ pasteTarget.addEventListener("paste", (event) => {
             control.preserveAspectRatio = true
             selectionManager.select(control)
             gui.addControl(control)
+
+            control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
         })
         image.src = url
     })
