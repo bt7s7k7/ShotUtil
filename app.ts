@@ -1,13 +1,15 @@
-import { CanvasGUI, Rect } from "./GUILibrary/GUI.js"
+import { CanvasGUI, Rect, Point } from "./GUILibrary/GUI.js"
 import { ResizableSelectionManager } from "./GUILibrary/UserResizable.js"
 import { UserResizableImage } from "./GUILibrary/UserResizableImage.js"
 import { registerMouseMovement } from "./GUILibrary/mouseMovement.js"
 
 var canvas = document.getElementById("canvas") as HTMLCanvasElement
+var ctx = canvas.getContext("2d")
 var pasteTarget = document.getElementById("pasteTarget") as HTMLInputElement
 var selectionManager = new ResizableSelectionManager()
 
-var gui = new CanvasGUI(canvas)
+var gui = new CanvasGUI()
+gui.registerListeners(canvas)
 window["gui"] = gui
 gui.centerCoords = true
 
@@ -23,7 +25,18 @@ function update() {
     canvas.width = size.width
     canvas.height = size.height
 
-    gui.update()
+    var offset = gui.update(ctx)
+
+    
+    const controls = gui.getControls()
+    if (controls.length != 0) {
+        var rect = getOutputRect(offset)
+
+        ctx.strokeStyle = "#555555"
+        ctx.strokeRect(...rect.spread())
+    }
+
+    gui.draw(ctx, offset)
     pasteTarget.focus()
     pasteTarget.value = ""
 
@@ -67,3 +80,18 @@ window.addEventListener("keydown", event => {
 })
 
 update()
+
+function getOutputRect(offset: Point) {
+    var minX = Infinity
+    var minY = Infinity
+    var maxX = -Infinity
+    var maxY = -Infinity
+    gui.getControls().forEach(v => {
+        const screenRect = v.getScreenRect(offset)
+        minX = Math.min(minX, screenRect.x)
+        minY = Math.min(minY, screenRect.y)
+        maxX = Math.max(maxX, screenRect.end().x)
+        maxY = Math.max(maxY, screenRect.end().y)
+    })
+    return new Rect(minX, minY, maxX - minX, maxY - minY)
+}

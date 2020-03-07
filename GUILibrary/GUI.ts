@@ -156,7 +156,6 @@ export type ButtonState = [boolean, boolean, boolean, boolean, boolean]
 export function defaultButtonsState() { return [false, false, false, false, false] as ButtonState }
 
 export class CanvasGUI {
-    protected ctx: CanvasRenderingContext2D
     public offset: Point = new Point()
     public centerCoords: boolean = false
     protected root: GUIControl = new GUIControl()
@@ -166,9 +165,7 @@ export class CanvasGUI {
     protected lastMousePos = new Point()
     protected selectedControl: GUIControl | "bg" = null
 
-    constructor(protected canvas: HTMLCanvasElement) {
-        this.ctx = canvas.getContext("2d", { alpha: true })
-
+    registerListeners(canvas: HTMLCanvasElement) {
         canvas.addEventListener("mousedown", (event) => {
             this.mouseDown[event.button] = true
         })
@@ -192,8 +189,9 @@ export class CanvasGUI {
         // To override
     }
 
-    update() {
-        var size = new Rect(0, 0, this.canvas.width, this.canvas.height)
+    update(ctx: CanvasRenderingContext2D) {
+        var canvas = ctx.canvas
+        var size = new Rect(0, 0, canvas.width, canvas.height)
 
         var currOffset = this.offset.copy()
         if (this.centerCoords) currOffset = currOffset.add(size.mul(0.5).end())
@@ -256,11 +254,18 @@ export class CanvasGUI {
             }
         }
 
-        this.visitControls(this.root, v => v.draw(currOffset, this.ctx))
-
+        
         this.lastMousePos = this.mousePos
         this.wasMouseDown = [...this.mouseDown] as ButtonState
         if (!this.mouseDown[0]) this.selectedControl = null
+
+        return currOffset
+    }
+    
+    draw(ctx: CanvasRenderingContext2D, currOffset: Point) {
+        var canvas = ctx.canvas
+        var size = new Rect(0, 0, canvas.width, canvas.height)
+        this.visitControls(this.root, v => v.draw(currOffset, ctx))
     }
 
     visitControls(control: GUIControl, callback: (control: GUIControl) => void) {
