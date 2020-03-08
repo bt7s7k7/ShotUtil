@@ -30,6 +30,12 @@ outputImage.addEventListener("contextmenu", () => {
 outputImage.addEventListener("drag", event => event.preventDefault())
 outputImage.addEventListener("dragstart", event => event.preventDefault())
 outputImage.addEventListener("dragend", event => event.preventDefault())
+window.addEventListener("drop", event => {
+    addImages([...event.dataTransfer.files])
+    event.preventDefault()
+})
+
+window.addEventListener("dragover", event => event.preventDefault())
 
 cropGUI.onBackgroundMouse = (state) => {
     if (cropImageControl && state.down[0]) {
@@ -86,6 +92,10 @@ function update() {
 
 pasteTarget.addEventListener("paste", (event) => {
     var files = [...event.clipboardData.files]
+    addImages(files)
+})
+
+function addImages(files: File[]) {
     files.forEach(v => {
         var url = URL.createObjectURL(v)
         var image = new Image()
@@ -97,12 +107,11 @@ pasteTarget.addEventListener("paste", (event) => {
             control.preserveAspectRatio = true
             selectionManager.select(control)
             gui.addControl(control)
-
             control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
         })
         image.src = url
     })
-})
+}
 
 function renderOutput() {
     var selected = selectionManager.getSelected()
