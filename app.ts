@@ -3,6 +3,10 @@ import { ResizableSelectionManager, UserResizable } from "./GUILibrary/UserResiz
 import { UserResizableImage } from "./GUILibrary/UserResizableImage.js"
 import { registerMouseMovement } from "./GUILibrary/mouseMovement.js"
 import { ImageControl } from "./GUILibrary/ImageControl.js"
+import { UserResizableEllipse } from "./GUILibrary/UserResizableEllipse.js"
+import { UserResizableArrow } from "./GUILibrary/UserResizableArrow.js"
+import { UserResizableShape } from "./GUILibrary/UserResizableShape.js"
+import { UserResizableText } from "./GUILibrary/UserResizableText.js"
 
 var canvas = document.getElementById("canvas") as HTMLCanvasElement
 var ctx = canvas.getContext("2d")
@@ -140,7 +144,7 @@ function renderOutput() {
 }
 
 window.addEventListener("keydown", event => {
-    if (event.ctrlKey || event.metaKey || event.shiftKey) return
+    if (event.ctrlKey) return
     const selected = selectionManager.getSelected()
     if (cropRect) {
         if (event.code == "Enter" || event.code == "Escape" || event.code == "KeyC") {
@@ -174,7 +178,7 @@ window.addEventListener("keydown", event => {
         } else if (event.code == "KeyX") {
             gui.getControls().slice().forEach(v => v.remove())
         } else if (event.code == "KeyC") {
-            if (selected) {
+            if (selected && selected instanceof UserResizableImage) {
                 cropCanvas.hidden = false
                 normalControls.hidden = true
                 cropControls.hidden = false
@@ -209,11 +213,56 @@ window.addEventListener("keydown", event => {
 
 
                 selected.blur()
+            } else if (event.shiftKey && selected instanceof UserResizableArrow) {
+                selected.target = gui.getMousePos().add(gui.offset.mul(-1)).add(new Point(canvas.width, canvas.height).mul(-0.5))
+            } else if (event.altKey && selected instanceof UserResizableArrow) {
+                let sizes = [
+                    0, 10, 20, 30
+                ]
+                let index = sizes.indexOf(selected.armLength)
+                if (index == -1) index = 1
+                index = (index + 1) % sizes.length
+
+                selected.armLength = sizes[index]
+            } else if (event.shiftKey && selected instanceof UserResizableText) {
+                selected.openTextPrompt()
+            } else if (event.altKey && selected instanceof UserResizableText) {
+                let fonts = [
+                    "Arial", "Lucida Console", "Courier", "sans", "Segoe UI"
+                ]
+                let index = fonts.indexOf(selected.font)
+                if (index == -1) index = 1
+                index = (index + 1) % fonts.length
+
+                selected.font = fonts[index]
+            } else if (selected instanceof UserResizableShape) {
+                selected.openColorDialog()
             }
         } else if (event.code == "KeyT") {
-            if (selected) (selected as UserResizableImage).scale.y *= -1
+            if (selected instanceof UserResizableImage) selected.scale.y *= -1
         } else if (event.code == "KeyG") {
-            if (selected) (selected as UserResizableImage).scale.x *= -1
+            if (selected instanceof UserResizableImage) selected.scale.x *= -1
+        } else if (event.code == "KeyM") {
+            let control = new UserResizableEllipse()
+            gui.addControl(control)
+            control.registerManager(selectionManager)
+            selectionManager.select(control)
+            control.rect = new Rect(0, 0, 100, 100)
+            control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
+        } else if (event.code == "KeyN") {
+            let control = new UserResizableArrow()
+            gui.addControl(control)
+            control.registerManager(selectionManager)
+            selectionManager.select(control)
+            control.rect = new Rect(0, 0, 100, 100)
+            control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
+        } else if (event.code == "KeyB") {
+            let control = new UserResizableText()
+            gui.addControl(control)
+            control.registerManager(selectionManager)
+            selectionManager.select(control)
+            control.rect = new Rect(0, 0, 100, 100)
+            control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
         }
     }
 })

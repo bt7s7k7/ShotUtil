@@ -4,11 +4,13 @@ import { Button, defaultButtonStyle, IButtonStyle } from "./Button.js";
 
 export interface IUserResizableStyle {
     stroke: string,
+    contrastStroke: string,
     buttonStyle: IButtonStyle
 }
 
 export const defaultUserResizableStyle = {
     stroke: "#ffffff",
+    contrastStroke: "#1a1a1a",
     buttonStyle: defaultButtonStyle
 } as IUserResizableStyle
 
@@ -63,7 +65,14 @@ export class UserResizable extends Draggable {
     protected focused = true
 
     draw(offset: Point, ctx: CanvasRenderingContext2D) {
-        if (this.focused) ctx.strokeRect(...this.getScreenRect(offset).spread())
+        if (this.focused) {
+            ctx.lineWidth = 3
+            ctx.strokeStyle = this.style.contrastStroke
+            ctx.strokeRect(...this.getScreenRect(offset).spread())
+            ctx.lineWidth = 1
+            ctx.strokeStyle = this.style.stroke
+            ctx.strokeRect(...this.getScreenRect(offset).spread())
+        }
     }
 
     focus() {

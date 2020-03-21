@@ -11,14 +11,32 @@ export class Rect {
         return new Rect(Math.floor(this.x) + 0.5, Math.floor(this.y) + 0.5, Math.floor(this.width), Math.floor(this.height))
     }
     public x: number;
+    public y: number
 
-    constructor(x: number | { x: number, y: number, width: number, height: number } = 0, public y = 0, public width = 0, public height = 0) {
+    constructor(x: number | { x: number, y: number } | { x: number, y: number, width: number, height: number } = 0, y: number | { x: number, y: number } = 0, public width = 0, public height = 0) {
         if (typeof x == "object") {
             this.x = x.x
             this.y = x.y
-            this.width = x.width
-            this.height = x.height
-        } else this.x = x
+            if ('width' in x) {
+                this.width = x.width
+                this.height = x.height
+            } else {
+                if (typeof y == "object") {
+                    this.width = y.x
+                    this.height = y.y
+                } else {
+                    this.width = y
+                    this.height = width
+                }
+            }
+        } else {
+            this.x = x
+            if (typeof y == "number") {
+                this.y = y
+            } else {
+                throw new TypeError("y can only be an object if x is point")
+            }
+        }
     }
 
     spread(): [number, number, number, number] {
@@ -63,6 +81,14 @@ export class Rect {
 }
 
 export class Point {
+    normalize() {
+        return this.mul(1 / Math.hypot(this.x, this.y))
+    }
+
+    toAngle() {
+        return Math.atan2(this.x, this.y)
+    }
+
     scale(other: { x: number, y: number } | number, otherY: number = 0) {
         if (typeof other == "object")
             return new Point(this.x * other.x, this.y * other.y)
@@ -75,6 +101,10 @@ export class Point {
             this.x = x.x
             this.y = x.y
         } else this.x = x
+    }
+
+    static fromAngle(angle: number) {
+        return new Point(Math.sin(angle), Math.cos(angle))
     }
 
     spread(): [number, number] {
@@ -164,6 +194,8 @@ export class CanvasGUI {
     protected mousePos = new Point()
     protected lastMousePos = new Point()
     protected selectedControl: GUIControl | "bg" = null
+
+    getMousePos() { return this.mousePos }
 
     registerListeners(target: HTMLElement) {
         target.addEventListener("mousedown", (event) => {
