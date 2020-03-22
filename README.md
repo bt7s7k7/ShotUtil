@@ -13,3 +13,7 @@ Quick screenshot editing tool. Allows for:
 - Flipping
 
 ![image](https://user-images.githubusercontent.com/26630940/76144837-59fe2980-6084-11ea-86ab-4dfea867ad4b.png)
+
+- Adding shapes
+
+![image](https://user-images.githubusercontent.com/26630940/77247351-8000fd80-6c30-11ea-84d6-cdce37fddadf.png)
