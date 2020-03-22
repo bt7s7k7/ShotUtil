@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "serve": "firebase serve"
   },
   "repository": {
     "type": "git",

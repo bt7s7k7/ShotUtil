@@ -5,6 +5,6 @@
         "sourceMap": true,
         "lib": [ "es6", "dom", "dom.iterable" ],
         "module": "ES6",
-        "outDir": "build"
+        "outDir": "public/build"
     }
 }
