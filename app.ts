@@ -7,6 +7,7 @@ import { UserResizableEllipse } from "./GUILibrary/UserResizableEllipse.js"
 import { UserResizableArrow } from "./GUILibrary/UserResizableArrow.js"
 import { UserResizableShape } from "./GUILibrary/UserResizableShape.js"
 import { UserResizableText } from "./GUILibrary/UserResizableText.js"
+import { UserResizableSquare } from "./GUILibrary/UserResizableSquare.js"
 
 var canvas = document.getElementById("canvas") as HTMLCanvasElement
 var ctx = canvas.getContext("2d")
@@ -263,6 +264,14 @@ window.addEventListener("keydown", event => {
             selectionManager.select(control)
             control.rect = new Rect(0, 0, 100, 100)
             control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
+        } else if (event.code == "KeyV") {
+            let control = new UserResizableSquare()
+            gui.addControl(control)
+            control.registerManager(selectionManager)
+            selectionManager.select(control)
+            control.rect = new Rect(0, 0, 100, 100)
+            control.rect = control.rect.translate(gui.offset.mul(-1).add(control.rect.size().mul(-0.5)))
+            control.shapeStyle = { ...control.shapeStyle, color: "black" }
         }
     }
 })
