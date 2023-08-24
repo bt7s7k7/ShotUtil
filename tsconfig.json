@@ -1,10 +1,28 @@
 {
     "compilerOptions": {
-        "incremental": true,
-        "target": "es6",
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "strict": true,
+        "jsx": "preserve",
         "sourceMap": true,
-        "lib": [ "es6", "dom", "dom.iterable" ],
-        "module": "ES6",
-        "outDir": "public/build"
-    }
+        "resolveJsonModule": true,
+        "esModuleInterop": true,
+        "declaration": true,
+        "lib": [
+            "ESNext",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "types": [
+            "vite/client"
+        ],
+        "useDefineForClassFields": false
+    },
+    "include": [
+        "src/**/*.ts",
+        "src/**/*.d.ts",
+        "src/**/*.tsx",
+        "src/**/*.vue"
+    ]
 }

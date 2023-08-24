@@ -1,23 +1,27 @@
 {
-  "name": "shotutil",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc",
-    "serve": "firebase serve"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/bt7s7k7/ShotUtil.git"
-  },
-  "author": "bt7s7k7",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/bt7s7k7/ShotUtil/issues"
-  },
-  "homepage": "https://github.com/bt7s7k7/ShotUtil#readme",
-  "devDependencies": {
-    "typescript": "^3.8.3"
-  }
+    "name": "shot-util",
+    "version": "0.0.0",
+    "private": true,
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "@vitejs/plugin-vue": "^4.2.3",
+        "@vitejs/plugin-vue-jsx": "^3.0.1",
+        "concurrently": "^8.2.0",
+        "dotenv": "^16.3.1",
+        "sass": "^1.63.6",
+        "typescript": "^5.1.6",
+        "vite": "^4.4.3"
+    },
+    "scripts": {
+        "dev": "concurrently --raw --kill-others \"vite\" \"tsc --noEmit --watch --incremental --preserveWatchOutput\"",
+        "build": "tsc --noEmit --incremental && vite build",
+        "serve": "vite preview",
+        "get-ucpem": "curl -L https://github.com/bt7s7k7/UCPeM/releases/latest/download/ucpem.js -o node_modules/.bin/ucpem"
+    },
+    "dependencies": {
+        "@mdi/js": "^7.2.96",
+        "vue": "^3.3.4",
+        "vue-router": "^4.2.4"
+    }
 }
