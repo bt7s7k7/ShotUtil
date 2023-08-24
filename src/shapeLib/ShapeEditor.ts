@@ -1,3 +1,4 @@
+import { reverseIterate } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
@@ -14,6 +15,7 @@ export interface ShapeEditorDragState {
 
 export class ShapeEditor extends EventListener {
     public readonly onPostRender = new EventEmitter()
+    public readonly onCursorChange = new EventEmitter<string>()
 
     public drawer: Drawer = null!
     public camera = new Drawer.Camera({ shouldCenterView: true })
@@ -25,6 +27,10 @@ export class ShapeEditor extends EventListener {
     public addShape(shape: Shape) {
         shape.editor = this
         this._shapes.push(shape)
+        this._selected = shape
+        if (shape.getPos().isNaN()) {
+            shape.setPos(this.camera.offset.mul(-1))
+        }
     }
 
     public handleClick(pos: Point) {
@@ -40,7 +46,7 @@ export class ShapeEditor extends EventListener {
     }
 
     public handleMouseMove(pos: Point) {
-        this._lastMousePos = this.camera.screenToWorld.transform(pos)
+        this._lastMousePos = pos
     }
 
     public handleDrag(pos: Point): ShapeEditorDragState | null {
@@ -78,7 +84,7 @@ export class ShapeEditor extends EventListener {
     protected _queryPoint(pos: Point) {
         const worldPos = this.camera.screenToWorld.transform(pos)
 
-        for (const handle of this._handles) {
+        for (const handle of reverseIterate(this._handles)) {
             const center = this.camera.worldToScreen.transform(handle.center)
             const testRect = Rect.extends(center, handle.size)
 
@@ -87,7 +93,7 @@ export class ShapeEditor extends EventListener {
             }
         }
 
-        for (const shape of this._shapes) {
+        for (const shape of reverseIterate(this._shapes)) {
             if (shape.testCollision(worldPos)) {
                 return shape
             }
@@ -100,7 +106,7 @@ export class ShapeEditor extends EventListener {
         this.drawer = this.drawerInput.drawer
         if (this.drawer == null) return
         this.drawer.setNativeSize()
-        this.camera.updateViewport(this.drawer.size)
+        this.camera.updateViewport(this.drawer.size.mul(0.5).ceilSize().mul(2))
         this.camera.pushTransform(this.drawer)
 
         for (const shape of this._shapes) {
@@ -117,11 +123,14 @@ export class ShapeEditor extends EventListener {
         }
 
         const hover = this._queryPoint(this._lastMousePos)
+        this.onCursorChange.emit(hover == null ? "initial" : hover instanceof Shape ? "grab" : hover.cursor != null ? hover.cursor : "initial")
+
         for (const handle of this._handles) {
-            const center = this.camera.worldToScreen.transform(handle.center)
+            const center = this.camera.worldToScreen.transform(handle.center).floor()
             handle.render(center, this.drawer, hover == handle)
         }
 
+        this.onPostRender.emit()
     }
 
     constructor(

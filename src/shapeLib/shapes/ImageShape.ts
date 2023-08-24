@@ -25,5 +25,6 @@ export class ImageShape extends BoxShape {
         public readonly source: Drawer
     ) {
         super(Rect.extends(pos, source.size.size()))
+        this.keepAspectRatio = true
     }
 }

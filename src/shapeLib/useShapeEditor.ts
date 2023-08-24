@@ -8,9 +8,11 @@ const NULL_CALLBACK = null as ((editor: ShapeEditor) => void) | null
 
 export function useShapeEditor({ afterRender = NULL_CALLBACK, onReady = NULL_CALLBACK } = {}) {
     const editor = shallowRef<ShapeEditor>(null!)
+    const cursor = shallowRef("initial")
     const consumer = defineDrawerInputConsumer((self, drawerInput) => {
         editor.value = new ShapeEditor(drawerInput)
         editor.value.onPostRender.add(editor.value, () => afterRender?.(editor.value))
+        editor.value.onCursorChange.add(editor.value, (newCursor) => cursor.value = newCursor)
         onReady?.(editor.value)
         return editor.value
     })
@@ -44,6 +46,6 @@ export function useShapeEditor({ afterRender = NULL_CALLBACK, onReady = NULL_CAL
     }
 
     return {
-        consumer, grab, editor, handleMouseMove, handleClick
+        consumer, grab, editor, handleMouseMove, handleClick, cursor
     }
 }
