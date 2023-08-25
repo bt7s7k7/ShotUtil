@@ -60,38 +60,40 @@ export const EditorView = (defineComponent({
 
         return () => (
             <UploadOverlay onDrop={addImages} class="flex-fill">
-                <input ref={pasteInput} onPaste={handlePaste} data-drawer-input-ignore />
+                <input ref={pasteInput} onPaste={handlePaste} class="opacity-0" data-drawer-input-ignore />
                 <DrawerView class="absolute-fill" consumer={consumer} />
                 <img
                     class="absolute-fill opacity-0" onMousedown={multicast(pan, grab)} onTouchstart={grab} ref={outputImage}
                     onMousemove={handleMouseMove} onClick={handleClick} onWheel={handleWheel} onContextmenu={handleOutputImage}
                     style={{ cursor: cursor.value }}
                 />
-                <div class="absolute top-0 left-0 right-0 bg-white flex row center-cross">
-                    {toolbar.value.map(item => (
-                        item.kind == "button" ? (
-                            <Button clear onClick={item.action}> <Icon icon={item.icon} /> </Button>
-                        ) : item.kind == "toggle" ? (
-                            <Button clear onClick={() => { item.action(!item.value); updateToolbar(editor.value) }} class={[item.value && "border-primary"]}> <Icon icon={item.icon} /> </Button>
-                        ) : item.kind == "slider" ? <>
-                            <Icon icon={item.icon} />
-                            <Slider modelValue={item.value} onInput={(v) => { item.action(v as number); updateToolbar(editor.value) }} />
-                        </> : item.kind == "separator" ? (
-                            <div class="border-left h-fill" />
-                        ) : item.kind == "color-button" ? (
-                            <button
-                                class="w-3 mx-1 h-3 border-none"
-                                style={{ outline: item.value ? "2px solid var(--bg-primary)" : "1px solid black", backgroundColor: item.color.toHex() }}
-                                onClick={() => { item.action(); updateToolbar(editor.value) }}
-                            />
-                        ) : unreachable()
-                    ))}
+                <div class="absolute top-0 left-0 right-0 bg-dark">
+                    <div class="bg-secondary-translucent flex row center-cross">
+                        {toolbar.value.map(item => (
+                            item.kind == "button" ? (
+                                <Button clear onClick={item.action}> <Icon icon={item.icon} /> </Button>
+                            ) : item.kind == "toggle" ? (
+                                <Button clear onClick={() => { item.action(!item.value); updateToolbar(editor.value) }} class={[item.value && "border-primary"]}> <Icon icon={item.icon} /> </Button>
+                            ) : item.kind == "slider" ? <>
+                                <Icon icon={item.icon} />
+                                <Slider modelValue={item.value} onInput={(v) => { item.action(v as number); updateToolbar(editor.value) }} />
+                            </> : item.kind == "separator" ? (
+                                <div class="border-left h-fill" />
+                            ) : item.kind == "color-button" ? (
+                                <button
+                                    class="w-3 mx-1 h-3 border-none"
+                                    style={{ outline: item.value ? "2px solid var(--bg-primary)" : item.color.toGreyscale() == 0 ? "1px solid white" : "none", backgroundColor: item.color.toHex() }}
+                                    onClick={() => { item.action(); updateToolbar(editor.value) }}
+                                />
+                            ) : unreachable()
+                        ))}
 
-                    <div class="flex-fill" />
+                        <div class="flex-fill" />
 
-                    <Icon icon={mdiMagnify} />
-                    ×
-                    <div class="mr-2 w-5 small">{zoom.value}</div>
+                        <Icon icon={mdiMagnify} />
+                        ×
+                        <div class="mr-2 w-5 small">{zoom.value}</div>
+                    </div>
                 </div>
             </UploadOverlay>
         )
