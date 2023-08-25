@@ -98,7 +98,7 @@ export abstract class BoxShape extends Shape {
     }
 
     public testCollision(point: Point) {
-        return this.rect.containsPoint(point)
+        return Rect.union([this.rect]).containsPoint(point)
     }
 
     public drawOutline(): void {
