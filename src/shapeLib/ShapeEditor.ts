@@ -1,4 +1,4 @@
-import { reverseIterate } from "../comTypes/util"
+import { arrayRemove, reverseIterate, shallowClone } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
@@ -16,30 +16,60 @@ export interface ShapeEditorDragState {
 export class ShapeEditor extends EventListener {
     public readonly onPostRender = new EventEmitter()
     public readonly onCursorChange = new EventEmitter<string>()
+    public readonly onSelectionChange = new EventEmitter()
 
     public drawer: Drawer = null!
     public camera = new Drawer.Camera({ shouldCenterView: true })
     protected _handles: Handle[] = []
     protected _shapes: Shape[] = []
-    protected _selected: Shape | null = null
     protected _lastMousePos = Point.NaN
+
+    protected _selected: Shape | null = null
+    public get selected() { return this._selected }
+    public select(shape: Shape | null) {
+        if (this._selected == shape) return
+        this._selected = shape
+        this.onSelectionChange.emit()
+    }
 
     public addShape(shape: Shape) {
         shape.editor = this
         this._shapes.push(shape)
-        this._selected = shape
+        this.select(shape)
         if (shape.getPos().isNaN()) {
             shape.setPos(this.camera.offset.mul(-1))
         }
+    }
+
+    public moveToTop(shape: Shape) {
+        arrayRemove(this._shapes, shape)
+        this._shapes.push(shape)
+    }
+
+    public moveToBack(shape: Shape) {
+        arrayRemove(this._shapes, shape)
+        this._shapes.unshift(shape)
+    }
+
+    public duplicateShape(shape: Shape) {
+        const duplicate = shallowClone(shape)
+        this.addShape(duplicate)
+        return duplicate
+    }
+
+    public deleteSelected() {
+        if (this._selected == null) return
+        arrayRemove(this._shapes, this._selected)
+        this.select(null)
     }
 
     public handleClick(pos: Point) {
         const target = this._queryPoint(pos)
 
         if (target == null) {
-            this._selected = null
+            this.select(null)
         } else if (target instanceof Shape) {
-            this._selected = target
+            this.select(target)
         } else {
             target.handleClick?.()
         }
@@ -55,7 +85,7 @@ export class ShapeEditor extends EventListener {
         if (target == null) {
             return null
         } else if (target instanceof Shape) {
-            this._selected = target
+            this.select(target)
             const initScreen = pos
             const initWorld = target.getPos()
             return {

@@ -20,6 +20,19 @@ export class ImageShape extends BoxShape {
         this.editor.drawer.restore()
     }
 
+    public flip(axis: "x" | "y") {
+        const size = this.rect.size()
+        const pos = this.rect.pos()
+
+        const sizeAxis = size[axis]
+        const posAxis = pos[axis]
+
+        const newSize = size.with(axis, sizeAxis * -1)
+        const newPos = pos.with(axis, posAxis + sizeAxis)
+
+        this.rect = new Rect(newPos, newSize)
+    }
+
     constructor(
         public readonly pos: Point,
         public readonly source: Drawer

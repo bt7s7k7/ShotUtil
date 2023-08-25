@@ -1,15 +1,15 @@
-import { mdiShapeSquarePlus } from "@mdi/js"
 import { defineComponent, ref } from "vue"
+import { unreachable } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
-import { Rect } from "../drawer/Rect"
 import { DrawerView } from "../drawerInputVue3/DrawerView"
 import { ImageShape } from "../shapeLib/shapes/ImageShape"
-import { SolidColorShape } from "../shapeLib/shapes/SolidColorShape"
 import { useShapeEditor } from "../shapeLib/useShapeEditor"
 import { Button } from "../vue3gui/Button"
 import { Icon } from "../vue3gui/Icon"
+import { Slider } from "../vue3gui/Slider"
 import { UploadOverlay } from "../vue3gui/UploadOverlay"
+import { useToolbar } from "./useToolbar"
 
 export const EditorView = (defineComponent({
     name: "EditorView",
@@ -24,6 +24,9 @@ export const EditorView = (defineComponent({
                 editor.value.addShape(new ImageShape(Point.NaN, Drawer.makeTestPattern("uv", new Point(300, 200))))
                 // @ts-ignore
                 window.editor = editor.value
+
+                updateToolbar(editor.value)
+                editor.value.onSelectionChange.add(editor.value, () => updateToolbar(editor.value))
             }
         })
 
@@ -45,9 +48,7 @@ export const EditorView = (defineComponent({
             addImages(files)
         }
 
-        function addSolidBox() {
-            editor.value.addShape(new SolidColorShape(new Rect(NaN, NaN, 100, 100)))
-        }
+        const { toolbar, updateToolbar } = useToolbar()
 
         return () => (
             <UploadOverlay onDrop={addImages} class="flex-fill">
@@ -58,8 +59,25 @@ export const EditorView = (defineComponent({
                     onMousemove={handleMouseMove} onClick={handleClick}
                     style={{ cursor: cursor.value }}
                 />
-                <div class="absolute top-0 left-0 right-0 bg-white">
-                    <Button onClick={addSolidBox} clear> <Icon icon={mdiShapeSquarePlus} /> </Button>
+                <div class="absolute top-0 left-0 right-0 bg-white flex row center-cross">
+                    {toolbar.value.map(item => (
+                        item.kind == "button" ? (
+                            <Button clear onClick={item.action}> <Icon icon={item.icon} /> </Button>
+                        ) : item.kind == "toggle" ? (
+                            <Button clear onClick={() => { item.action(!item.value); updateToolbar(editor.value) }} class={[item.value && "border-primary"]}> <Icon icon={item.icon} /> </Button>
+                        ) : item.kind == "slider" ? <>
+                            <Icon icon={item.icon} />
+                            <Slider modelValue={item.value} onInput={(v) => { item.action(v as number); updateToolbar(editor.value) }} />
+                        </> : item.kind == "separator" ? (
+                            <div class="border-left h-fill" />
+                        ) : item.kind == "color-button" ? (
+                            <button
+                                class="w-3 mx-1 h-3 border-none"
+                                style={{ outline: item.value ? "2px solid var(--bg-primary)" : "1px solid black", backgroundColor: item.color.toHex() }}
+                                onClick={() => { item.action(); updateToolbar(editor.value) }}
+                            />
+                        ) : unreachable()
+                    ))}
                 </div>
             </UploadOverlay>
         )

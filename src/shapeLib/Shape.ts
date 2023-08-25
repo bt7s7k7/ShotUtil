@@ -12,4 +12,8 @@ export abstract class Shape {
     public abstract getHandles(): Handle[]
     public abstract getPos(): Point
     public abstract setPos(newPos: Point): void
+
+    public translate(offset: Point) {
+        this.setPos(this.getPos().add(offset))
+    }
 }
