@@ -1,4 +1,4 @@
-import { mdiArrangeBringForward, mdiArrangeSendBackward, mdiArrowLeft, mdiArrowRight, mdiContentDuplicate, mdiDelete, mdiFlipHorizontal, mdiFlipVertical, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrangeBringForward, mdiArrangeSendBackward, mdiArrowLeft, mdiArrowRight, mdiContentDuplicate, mdiDelete, mdiFlipHorizontal, mdiFlipVertical, mdiFormatAnnotationPlus, mdiFormatSize, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { shallowReactive, shallowRef } from "vue"
 import { assertType, bindObjectFunction } from "../comTypes/util"
 import { Color } from "../drawer/Color"
@@ -8,6 +8,8 @@ import { ShapeEditor } from "../shapeLib/ShapeEditor"
 import { ArrowShape } from "../shapeLib/shapes/ArrowShape"
 import { ImageShape } from "../shapeLib/shapes/ImageShape"
 import { SolidColorShape } from "../shapeLib/shapes/SolidColorShape"
+import { TextShape } from "../shapeLib/shapes/TextShape"
+import { useDynamicsEmitter } from "../vue3gui/DynamicsEmitter"
 
 export type ToolbarItem =
     | { kind: "button", icon: string, action: () => void }
@@ -17,6 +19,8 @@ export type ToolbarItem =
     | { kind: "color-button", value: boolean, color: Color, action: () => void }
 
 export function useToolbar() {
+    const emitter = useDynamicsEmitter()
+
     return bindObjectFunction(shallowReactive({
         toolbar: shallowRef([] as ToolbarItem[]),
         updateToolbar(editor: ShapeEditor) {
@@ -25,6 +29,7 @@ export function useToolbar() {
 
             toolbar.push({ kind: "button", icon: mdiShapeSquarePlus, action: () => editor.addShape(new SolidColorShape(new Rect(NaN, NaN, 100, 100))) })
             toolbar.push({ kind: "button", icon: mdiVectorPolylinePlus, action: () => editor.addShape(new ArrowShape()) })
+            toolbar.push({ kind: "button", icon: mdiFormatAnnotationPlus, action: () => editor.addShape(new TextShape()) })
 
             const target = editor.selected
             if (target) {
@@ -52,6 +57,15 @@ export function useToolbar() {
                     for (const prop of ["arrowStart", "arrowEnd"] as const) {
                         toolbar.push({ kind: "toggle", value: target[prop], icon: prop == "arrowStart" ? mdiArrowLeft : mdiArrowRight, action: (v) => target[prop] = v })
                     }
+                }
+
+                if (target instanceof TextShape) {
+                    toolbar.push({
+                        kind: "button", icon: mdiFormatSize, action: async () => {
+                            const newText = await emitter.prompt({ title: "Enter text", initialValue: target.text })
+                            if (newText != null) target.text = newText
+                        }
+                    })
                 }
             }
         }

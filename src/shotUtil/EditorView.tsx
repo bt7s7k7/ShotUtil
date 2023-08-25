@@ -1,5 +1,5 @@
 import { mdiMagnify } from "@mdi/js"
-import { defineComponent, ref } from "vue"
+import { defineComponent, getCurrentInstance, ref } from "vue"
 import { multicast, unreachable } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
@@ -18,9 +18,11 @@ export const EditorView = (defineComponent({
         const pasteInput = ref<HTMLInputElement>()
 
         const zoom = ref("1")
+        const instance = getCurrentInstance()!
         const { consumer, editor, grab, handleClick, handleMouseMove, cursor, pan, handleWheel, renderOutput } = useShapeEditor({
             afterRender() {
-                pasteInput.value?.focus()
+                const modalActive = (instance.root as any)["__v3g_modalStack"]?.stack.length > 0
+                if (!modalActive) pasteInput.value?.focus()
             },
             onReady() {
                 // @ts-ignore
