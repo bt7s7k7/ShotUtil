@@ -1,8 +1,8 @@
-import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
 import { Rect } from "../../drawer/Rect"
 import { Handle } from "../Handle"
 import { Shape } from "../Shape"
+import { ShapeUtil } from "../ShapeUtil"
 
 export abstract class BoxShape extends Shape {
     public keepAspectRatio = false
@@ -16,13 +16,7 @@ export abstract class BoxShape extends Shape {
             return {
                 center, size, cursor,
                 render: (center, ctx, hover) => {
-                    ctx
-                        .beginPath()
-                        .arc(center, 3)
-                        .setStyle(Color.white)
-                        .fill()
-                        .setStyle(Color.cyan)
-                        .stroke()
+                    ctx.use(ShapeUtil.drawHandle, center)
                 },
                 handleDrag: (pos) => {
                     const initSize = this.rect.size()
@@ -105,9 +99,8 @@ export abstract class BoxShape extends Shape {
         const rect = this.editor.camera.worldToScreen.transformRect(this.rect).makePixelPerfect()
 
         this.editor.drawer
-            .setStyle(Color.black).strokeRect(rect)
-            .setStyle(Color.cyan).setLineDash([5, 5]).strokeRect(rect)
-            .setLineDash(null)
+            .beginPath().rect(rect)
+            .use(ShapeUtil.drawOutline)
     }
 
     public getPos() {

@@ -1,4 +1,4 @@
-import { arrayRemove, rangeClamp, reverseIterate, shallowClone } from "../comTypes/util"
+import { arrayRemove, rangeClamp, reverseIterate } from "../comTypes/util"
 import { Color } from "../drawer/Color"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
@@ -29,6 +29,7 @@ export class ShapeEditor extends EventListener {
     protected _shapes: Shape[] = []
     protected _lastMousePos = Point.NaN
     protected _boundingBox = Rect.zero
+    protected _dragging: Shape | Handle | null = null
 
     protected _selected: Shape | null = null
     public get selected() { return this._selected }
@@ -66,13 +67,20 @@ export class ShapeEditor extends EventListener {
     }
 
     public duplicateShape(shape: Shape) {
-        const duplicate = shallowClone(shape)
+        const duplicate = shape.clone()
         this.addShape(duplicate)
         return duplicate
     }
 
     public deleteSelected() {
         if (this._selected == null) return
+        if (this._dragging) {
+            if (!(this._dragging instanceof Shape)) {
+                this._dragging.handleDelete?.()
+            }
+
+            return
+        }
         arrayRemove(this._shapes, this._selected)
         this.select(null)
     }
@@ -102,25 +110,29 @@ export class ShapeEditor extends EventListener {
             this.select(target)
             const initScreen = pos
             const initWorld = target.getPos()
+            this._dragging = target
             return {
                 update: (pos) => {
                     const offsetScreen = pos.add(initScreen.mul(-1))
                     const offsetWorld = offsetScreen.mul(1 / this.camera.scale)
                     target.setPos(initWorld.add(offsetWorld))
                 },
-                end() { }
+                end: () => {
+                    this._dragging = null
+                }
             }
         } else {
             if (target.handleDrag == null) return null
             const callback = target.handleDrag(pos)
+            this._dragging = target
 
             return {
                 update(pos) {
                     callback(pos)
                 },
-                end() {
-
-                },
+                end: () => {
+                    this._dragging = null
+                }
             }
         }
     }

@@ -23,7 +23,6 @@ export const EditorView = (defineComponent({
                 pasteInput.value?.focus()
             },
             onReady() {
-                editor.value.addShape(new ImageShape(Point.NaN, Drawer.makeTestPattern("uv", new Point(300, 200))))
                 // @ts-ignore
                 window.editor = editor.value
 
@@ -73,7 +72,7 @@ export const EditorView = (defineComponent({
                             item.kind == "button" ? (
                                 <Button clear onClick={item.action}> <Icon icon={item.icon} /> </Button>
                             ) : item.kind == "toggle" ? (
-                                <Button clear onClick={() => { item.action(!item.value); updateToolbar(editor.value) }} class={[item.value && "border-primary"]}> <Icon icon={item.icon} /> </Button>
+                                <Button clear onClick={() => { item.action(!item.value); updateToolbar(editor.value) }} class={[item.value && "text-success"]}> <Icon icon={item.icon} /> </Button>
                             ) : item.kind == "slider" ? <>
                                 <Icon icon={item.icon} />
                                 <Slider modelValue={item.value} onInput={(v) => { item.action(v as number); updateToolbar(editor.value) }} />

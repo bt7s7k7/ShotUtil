@@ -1,4 +1,4 @@
-import { Drawer } from "../drawer/Drawer"
+import { shallowClone } from "../comTypes/util"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
 import { Handle } from "./Handle"
@@ -14,6 +14,10 @@ export abstract class Shape {
     public abstract getPos(): Point
     public abstract setPos(newPos: Point): void
     public abstract getBoundingBox(): Rect
+
+    public clone(): this {
+        return shallowClone(this)
+    }
 
     public translate(offset: Point) {
         this.setPos(this.getPos().add(offset))

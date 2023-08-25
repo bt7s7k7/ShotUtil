@@ -1,10 +1,11 @@
-import { mdiArrangeBringForward, mdiArrangeSendBackward, mdiContentDuplicate, mdiDelete, mdiFlipHorizontal, mdiFlipVertical, mdiShapeSquarePlus } from "@mdi/js"
+import { mdiArrangeBringForward, mdiArrangeSendBackward, mdiArrowLeft, mdiArrowRight, mdiContentDuplicate, mdiDelete, mdiFlipHorizontal, mdiFlipVertical, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { shallowReactive, shallowRef } from "vue"
 import { assertType, bindObjectFunction } from "../comTypes/util"
 import { Color } from "../drawer/Color"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
 import { ShapeEditor } from "../shapeLib/ShapeEditor"
+import { ArrowShape } from "../shapeLib/shapes/ArrowShape"
 import { ImageShape } from "../shapeLib/shapes/ImageShape"
 import { SolidColorShape } from "../shapeLib/shapes/SolidColorShape"
 
@@ -23,6 +24,7 @@ export function useToolbar() {
             const toolbar = this.toolbar.value
 
             toolbar.push({ kind: "button", icon: mdiShapeSquarePlus, action: () => editor.addShape(new SolidColorShape(new Rect(NaN, NaN, 100, 100))) })
+            toolbar.push({ kind: "button", icon: mdiVectorPolylinePlus, action: () => editor.addShape(new ArrowShape()) })
 
             const target = editor.selected
             if (target) {
@@ -43,6 +45,12 @@ export function useToolbar() {
                 if (target instanceof ImageShape) {
                     for (const axis of ["x", "y"] as const) {
                         toolbar.push({ kind: "button", icon: axis == "x" ? mdiFlipHorizontal : mdiFlipVertical, action: () => target.flip(axis) })
+                    }
+                }
+
+                if (target instanceof ArrowShape) {
+                    for (const prop of ["arrowStart", "arrowEnd"] as const) {
+                        toolbar.push({ kind: "toggle", value: target[prop], icon: prop == "arrowStart" ? mdiArrowLeft : mdiArrowRight, action: (v) => target[prop] = v })
                     }
                 }
             }
