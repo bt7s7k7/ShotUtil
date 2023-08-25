@@ -57,7 +57,11 @@ export function useShapeEditor({ afterRender = NULL_CALLBACK, onReady = NULL_CAL
         editor.value.drawerInput.processWheelEvent(event)
     }
 
+    function renderOutput() {
+        return editor.value.renderFinal().ctx.canvas.toDataURL()
+    }
+
     return {
-        consumer, grab, editor, handleMouseMove, handleClick, handleWheel, cursor, pan
+        consumer, grab, editor, handleMouseMove, handleClick, handleWheel, cursor, pan, renderOutput
     }
 }

@@ -1,5 +1,6 @@
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
+import { Rect } from "../drawer/Rect"
 import { Handle } from "./Handle"
 import { ShapeEditor } from "./ShapeEditor"
 
@@ -12,6 +13,7 @@ export abstract class Shape {
     public abstract getHandles(): Handle[]
     public abstract getPos(): Point
     public abstract setPos(newPos: Point): void
+    public abstract getBoundingBox(): Rect
 
     public translate(offset: Point) {
         this.setPos(this.getPos().add(offset))

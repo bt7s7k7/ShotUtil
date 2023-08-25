@@ -1,4 +1,5 @@
 import { arrayRemove, rangeClamp, reverseIterate, shallowClone } from "../comTypes/util"
+import { Color } from "../drawer/Color"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
@@ -14,6 +15,7 @@ export interface ShapeEditorDragState {
 }
 
 const zoomPresets = [1 / 20, 1 / 10, 1 / 5, 1 / 2, 1, 2, 5, 10]
+const outputDrawer = new Drawer()
 
 export class ShapeEditor extends EventListener {
     public readonly onPostRender = new EventEmitter()
@@ -26,6 +28,7 @@ export class ShapeEditor extends EventListener {
     protected _handles: Handle[] = []
     protected _shapes: Shape[] = []
     protected _lastMousePos = Point.NaN
+    protected _boundingBox = Rect.zero
 
     protected _selected: Shape | null = null
     public get selected() { return this._selected }
@@ -147,17 +150,37 @@ export class ShapeEditor extends EventListener {
         return null
     }
 
-    protected _render() {
-        this.drawer = this.drawerInput.drawer
-        if (this.drawer == null) return
-        this.drawer.setNativeSize()
-        this.camera.updateViewport(this.drawer.size.mul(0.5).ceilSize().mul(2))
-        this.camera.pushTransform(this.drawer)
+    public renderFinal() {
+        outputDrawer.setSize(this._boundingBox.size())
+        outputDrawer.translate(this._boundingBox.pos().mul(-1))
+
+        this.drawer = outputDrawer
 
         for (const shape of this._shapes) {
             shape.draw()
         }
 
+        this.drawer = this.drawerInput.drawer
+
+        return outputDrawer
+    }
+
+    protected _render() {
+        this.drawer = this.drawerInput.drawer
+        if (this.drawer == null) return
+        this.drawer.setNativeSize()
+        this.camera.updateViewport(this.drawer.size.mul(0.5).ceilSize().mul(2))
+
+        this._boundingBox = Rect.union(this._shapes.map(v => v.getBoundingBox()))
+        this.drawer
+            .setStyle(Color.white.mul(0.5)).setLineDash([5, 5])
+            .strokeRect(this.camera.worldToScreen.transformRect(this._boundingBox).makePixelPerfect().expand(-1, -1))
+            .setLineDash(null)
+
+        this.camera.pushTransform(this.drawer)
+        for (const shape of this._shapes) {
+            shape.draw()
+        }
         this.drawer.restore()
 
         if (this._selected) {

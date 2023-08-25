@@ -118,6 +118,10 @@ export abstract class BoxShape extends Shape {
         this.rect = new Rect(newPos.add(this.rect.size().mul(-0.5)), this.rect.size())
     }
 
+    public getBoundingBox() {
+        return this.rect
+    }
+
     constructor(
         public rect: Rect
     ) { super() }

@@ -18,7 +18,7 @@ export const EditorView = (defineComponent({
         const pasteInput = ref<HTMLInputElement>()
 
         const zoom = ref("1")
-        const { consumer, editor, grab, handleClick, handleMouseMove, cursor, pan, handleWheel } = useShapeEditor({
+        const { consumer, editor, grab, handleClick, handleMouseMove, cursor, pan, handleWheel, renderOutput } = useShapeEditor({
             afterRender() {
                 pasteInput.value?.focus()
             },
@@ -53,13 +53,18 @@ export const EditorView = (defineComponent({
 
         const { toolbar, updateToolbar } = useToolbar()
 
+        const outputImage = ref<HTMLInputElement>(null!)
+        function handleOutputImage() {
+            outputImage.value.src = renderOutput()
+        }
+
         return () => (
             <UploadOverlay onDrop={addImages} class="flex-fill">
                 <input ref={pasteInput} onPaste={handlePaste} data-drawer-input-ignore />
                 <DrawerView class="absolute-fill" consumer={consumer} />
-                <div
-                    class="absolute-fill" onMousedown={multicast(pan, grab)} onTouchstart={grab}
-                    onMousemove={handleMouseMove} onClick={handleClick} onWheel={handleWheel}
+                <img
+                    class="absolute-fill opacity-0" onMousedown={multicast(pan, grab)} onTouchstart={grab} ref={outputImage}
+                    onMousemove={handleMouseMove} onClick={handleClick} onWheel={handleWheel} onContextmenu={handleOutputImage}
                     style={{ cursor: cursor.value }}
                 />
                 <div class="absolute top-0 left-0 right-0 bg-white flex row center-cross">
