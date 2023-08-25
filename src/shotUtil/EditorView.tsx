@@ -1,5 +1,6 @@
+import { mdiMagnify } from "@mdi/js"
 import { defineComponent, ref } from "vue"
-import { unreachable } from "../comTypes/util"
+import { multicast, unreachable } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
 import { DrawerView } from "../drawerInputVue3/DrawerView"
@@ -16,7 +17,8 @@ export const EditorView = (defineComponent({
     setup(props, ctx) {
         const pasteInput = ref<HTMLInputElement>()
 
-        const { consumer, editor, grab, handleClick, handleMouseMove, cursor } = useShapeEditor({
+        const zoom = ref("1")
+        const { consumer, editor, grab, handleClick, handleMouseMove, cursor, pan, handleWheel } = useShapeEditor({
             afterRender() {
                 pasteInput.value?.focus()
             },
@@ -27,6 +29,7 @@ export const EditorView = (defineComponent({
 
                 updateToolbar(editor.value)
                 editor.value.onSelectionChange.add(editor.value, () => updateToolbar(editor.value))
+                editor.value.onZoomLevelChange.add(editor.value, (newZoom) => zoom.value = newZoom < 1 ? `1/${1 / newZoom}` : newZoom.toString())
             }
         })
 
@@ -52,11 +55,11 @@ export const EditorView = (defineComponent({
 
         return () => (
             <UploadOverlay onDrop={addImages} class="flex-fill">
-                <input ref={pasteInput} onPaste={handlePaste} />
+                <input ref={pasteInput} onPaste={handlePaste} data-drawer-input-ignore />
                 <DrawerView class="absolute-fill" consumer={consumer} />
                 <div
-                    class="absolute-fill" onMousedown={grab} onTouchstart={grab}
-                    onMousemove={handleMouseMove} onClick={handleClick}
+                    class="absolute-fill" onMousedown={multicast(pan, grab)} onTouchstart={grab}
+                    onMousemove={handleMouseMove} onClick={handleClick} onWheel={handleWheel}
                     style={{ cursor: cursor.value }}
                 />
                 <div class="absolute top-0 left-0 right-0 bg-white flex row center-cross">
@@ -78,6 +81,12 @@ export const EditorView = (defineComponent({
                             />
                         ) : unreachable()
                     ))}
+
+                    <div class="flex-fill" />
+
+                    <Icon icon={mdiMagnify} />
+                    ×
+                    <div class="mr-2 w-5 small">{zoom.value}</div>
                 </div>
             </UploadOverlay>
         )

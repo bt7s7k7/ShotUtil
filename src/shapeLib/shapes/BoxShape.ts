@@ -111,11 +111,11 @@ export abstract class BoxShape extends Shape {
     }
 
     public getPos() {
-        return this.rect.pos()
+        return this.rect.center()
     }
 
     public setPos(newPos: Point) {
-        this.rect = new Rect(newPos, this.rect.size())
+        this.rect = new Rect(newPos.add(this.rect.size().mul(-0.5)), this.rect.size())
     }
 
     constructor(

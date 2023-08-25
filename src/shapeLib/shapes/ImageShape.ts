@@ -34,7 +34,7 @@ export class ImageShape extends BoxShape {
     }
 
     constructor(
-        public readonly pos: Point,
+        pos: Point,
         public readonly source: Drawer
     ) {
         super(Rect.extends(pos, source.size.size()))

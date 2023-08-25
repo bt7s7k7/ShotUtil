@@ -1,4 +1,4 @@
-import { arrayRemove, reverseIterate, shallowClone } from "../comTypes/util"
+import { arrayRemove, rangeClamp, reverseIterate, shallowClone } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
@@ -13,10 +13,13 @@ export interface ShapeEditorDragState {
     end(): void
 }
 
+const zoomPresets = [1 / 20, 1 / 10, 1 / 5, 1 / 2, 1, 2, 5, 10]
+
 export class ShapeEditor extends EventListener {
     public readonly onPostRender = new EventEmitter()
     public readonly onCursorChange = new EventEmitter<string>()
     public readonly onSelectionChange = new EventEmitter()
+    public readonly onZoomLevelChange = new EventEmitter<number>()
 
     public drawer: Drawer = null!
     public camera = new Drawer.Camera({ shouldCenterView: true })
@@ -30,6 +33,14 @@ export class ShapeEditor extends EventListener {
         if (this._selected == shape) return
         this._selected = shape
         this.onSelectionChange.emit()
+    }
+
+    protected _zoomLevel = zoomPresets.indexOf(1)
+    protected _zoom(offset: number) {
+        this._zoomLevel = rangeClamp(this._zoomLevel + offset, 0, zoomPresets.length - 1)
+        const newScale = zoomPresets[this._zoomLevel]
+        this.camera.zoomViewport(newScale, this._lastMousePos, this.drawerInput.drawer)
+        this.onZoomLevelChange.emit(newScale)
     }
 
     public addShape(shape: Shape) {
@@ -111,6 +122,10 @@ export class ShapeEditor extends EventListener {
         }
     }
 
+    public handlePan(delta: Point) {
+        this.camera.translate(delta.mul(-1))
+    }
+
     protected _queryPoint(pos: Point) {
         const worldPos = this.camera.screenToWorld.transform(pos)
 
@@ -171,5 +186,20 @@ export class ShapeEditor extends EventListener {
         drawerInput.onDraw.add(this, () => {
             this._render()
         })
+
+        drawerInput.mouse.onWheel.add(this, ({ delta }) => {
+            if (drawerInput.keyboard.key("ControlLeft").down) {
+                const offset = -Math.sign(delta.y)
+                this._zoom(offset)
+            } else {
+                this.camera.translate(delta.mul(-1))
+            }
+        })
+
+        drawerInput.keyboard.key("NumpadAdd").onDown.add(this, () => this._zoom(1))
+        drawerInput.keyboard.key("NumpadSubtract").onDown.add(this, () => this._zoom(-1))
+        drawerInput.keyboard.key("KeyD").onDown.add(this, () => this._selected && this.duplicateShape(this._selected).translate(Point.one.mul(20)))
+        drawerInput.keyboard.key("Delete").onDown.add(this, () => this.deleteSelected())
+        drawerInput.keyboard.key("KeyX").onDown.add(this, () => this.deleteSelected())
     }
 }

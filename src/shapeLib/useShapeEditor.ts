@@ -37,6 +37,13 @@ export function useShapeEditor({ afterRender = NULL_CALLBACK, onReady = NULL_CAL
         }
     })
 
+    const pan = useGrab({
+        button: 1,
+        onMove(event) {
+            editor.value.handlePan(new Point(event.moveX, event.moveY))
+        }
+    })
+
     function handleMouseMove(event: MouseEvent) {
         editor.value.handleMouseMove(new Point(event.clientX, event.clientY))
     }
@@ -45,7 +52,12 @@ export function useShapeEditor({ afterRender = NULL_CALLBACK, onReady = NULL_CAL
         editor.value.handleClick(new Point(event.clientX, event.clientY))
     }
 
+    function handleWheel(event: WheelEvent) {
+        event.preventDefault()
+        editor.value.drawerInput.processWheelEvent(event)
+    }
+
     return {
-        consumer, grab, editor, handleMouseMove, handleClick, cursor
+        consumer, grab, editor, handleMouseMove, handleClick, handleWheel, cursor, pan
     }
 }
