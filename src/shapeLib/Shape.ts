@@ -1,4 +1,4 @@
-import { shallowClone } from "../comTypes/util"
+import { shallowClone, unreachable } from "../comTypes/util"
 import { Point } from "../drawer/Point"
 import { Rect } from "../drawer/Rect"
 import { Handle } from "./Handle"
@@ -21,5 +21,17 @@ export abstract class Shape {
 
     public translate(offset: Point) {
         this.setPos(this.getPos().add(offset))
+    }
+
+    public isModal() {
+        return false
+    }
+
+    public modalAccept() {
+        unreachable()
+    }
+
+    public modalCancel() {
+        unreachable()
     }
 }

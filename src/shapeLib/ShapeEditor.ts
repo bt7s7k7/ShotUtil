@@ -1,4 +1,4 @@
-import { arrayRemove, rangeClamp, reverseIterate } from "../comTypes/util"
+import { arrayRemove, rangeClamp, reverseIterate, unreachable } from "../comTypes/util"
 import { Color } from "../drawer/Color"
 import { Drawer } from "../drawer/Drawer"
 import { Point } from "../drawer/Point"
@@ -36,6 +36,7 @@ export class ShapeEditor extends EventListener {
     public select(shape: Shape | null) {
         if (this._selected == shape) return
         this._selected = shape
+        if (shape) shape.editor = this
         this.onSelectionChange.emit()
     }
 
@@ -66,7 +67,14 @@ export class ShapeEditor extends EventListener {
         this._shapes.unshift(shape)
     }
 
+    public duplicateSelected() {
+        if (this._selected == null) return
+        if (this._selected.isModal()) return
+        this.duplicateShape(this._selected).translate(Point.one.mul(20))
+    }
+
     public duplicateShape(shape: Shape) {
+        if (shape.isModal()) unreachable()
         const duplicate = shape.clone()
         this.addShape(duplicate)
         return duplicate
@@ -74,6 +82,7 @@ export class ShapeEditor extends EventListener {
 
     public deleteSelected() {
         if (this._selected == null) return
+        if (this._selected.isModal()) return
         if (this._dragging) {
             if (!(this._dragging instanceof Shape)) {
                 this._dragging.handleDelete?.()
@@ -81,16 +90,22 @@ export class ShapeEditor extends EventListener {
 
             return
         }
-        arrayRemove(this._shapes, this._selected)
-        this.select(null)
+        this.deleteShape(this._selected)
+    }
+
+    public deleteShape(shape: Shape) {
+        arrayRemove(this._shapes, shape)
+        if (shape == this._selected) this.select(null)
     }
 
     public handleClick(pos: Point) {
         const target = this._queryPoint(pos)
 
         if (target == null) {
+            if (this._selected && this._selected.isModal()) return
             this.select(null)
         } else if (target instanceof Shape) {
+            if (this._selected && this._selected.isModal()) return
             this.select(target)
         } else {
             target.handleClick?.()
@@ -107,6 +122,7 @@ export class ShapeEditor extends EventListener {
         if (target == null) {
             return null
         } else if (target instanceof Shape) {
+            if (this._selected && this._selected.isModal()) return null
             this.select(target)
             const initScreen = pos
             const initWorld = target.getPos()
@@ -195,6 +211,13 @@ export class ShapeEditor extends EventListener {
         }
         this.drawer.restore()
 
+        if (this._selected && this._selected.isModal()) {
+            this.drawer.setStyle(Color.black.opacity(0.5)).fillRect()
+            this.camera.pushTransform(this.drawer)
+            this._selected.draw()
+            this.drawer.restore()
+        }
+
         if (this._selected) {
             this._selected.drawOutline()
             this._handles = this._selected.getHandles()
@@ -233,8 +256,12 @@ export class ShapeEditor extends EventListener {
 
         drawerInput.keyboard.key("NumpadAdd").onDown.add(this, () => this._zoom(1))
         drawerInput.keyboard.key("NumpadSubtract").onDown.add(this, () => this._zoom(-1))
-        drawerInput.keyboard.key("KeyD").onDown.add(this, () => this._selected && this.duplicateShape(this._selected).translate(Point.one.mul(20)))
-        drawerInput.keyboard.key("Delete").onDown.add(this, () => this.deleteSelected())
-        drawerInput.keyboard.key("KeyX").onDown.add(this, () => this.deleteSelected())
+
+        //drawerInput.keyboard.key("KeyD").onDown.add(this, () => this._selected && this.duplicateSelected())
+        //
+        //drawerInput.keyboard.key("Delete").onDown.add(this, () => this.deleteSelected())
+        //drawerInput.keyboard.key("KeyX").onDown.add(this, () => this.deleteSelected())
+        //
+        //drawerInput.keyboard.key("KeyC").onDown.add(this, () => this._selected instanceof ImageShape)
     }
 }

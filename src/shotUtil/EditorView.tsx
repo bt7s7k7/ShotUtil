@@ -2,7 +2,6 @@ import { mdiMagnify } from "@mdi/js"
 import { defineComponent, getCurrentInstance, ref } from "vue"
 import { multicast, unreachable } from "../comTypes/util"
 import { Drawer } from "../drawer/Drawer"
-import { Point } from "../drawer/Point"
 import { DrawerView } from "../drawerInputVue3/DrawerView"
 import { ImageShape } from "../shapeLib/shapes/ImageShape"
 import { useShapeEditor } from "../shapeLib/useShapeEditor"
@@ -40,7 +39,7 @@ export const EditorView = (defineComponent({
                 const image = new Image()
                 image.addEventListener("load", () => {
                     const source = new Drawer().matchSize(image).blit(image)
-                    editor.value.addShape(new ImageShape(Point.NaN, source))
+                    editor.value.addShape(new ImageShape(source))
                 })
                 image.src = url
             }
