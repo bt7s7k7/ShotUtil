@@ -1,4 +1,4 @@
-import { mdiArrangeBringForward, mdiArrangeSendBackward, mdiArrowLeft, mdiArrowRight, mdiCheck, mdiClose, mdiContentDuplicate, mdiCrop, mdiDelete, mdiFlipHorizontal, mdiFlipVertical, mdiFormatAnnotationPlus, mdiFormatSize, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrangeBringForward, mdiArrangeSendBackward, mdiArrowLeft, mdiArrowRight, mdiCheck, mdiClose, mdiContentDuplicate, mdiCrop, mdiDelete, mdiFlipHorizontal, mdiFlipVertical, mdiFormatAnnotationPlus, mdiFormatSize, mdiShapeCirclePlus, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { shallowReactive, shallowRef } from "vue"
 import { assertType, bindObjectFunction } from "../comTypes/util"
 import { Color } from "../drawer/Color"
@@ -7,6 +7,7 @@ import { KeyCode } from "../drawerInput/DrawerInput"
 import { EventListener } from "../eventLib/EventListener"
 import { ShapeEditor } from "../shapeLib/ShapeEditor"
 import { ArrowShape } from "../shapeLib/shapes/ArrowShape"
+import { EllipseShape } from "../shapeLib/shapes/EllipseShape"
 import { ImageShape } from "../shapeLib/shapes/ImageShape"
 import { SolidColorShape } from "../shapeLib/shapes/SolidColorShape"
 import { TextShape } from "../shapeLib/shapes/TextShape"
@@ -54,6 +55,7 @@ export function useToolbar() {
             toolbar.push({ kind: "button", icon: mdiShapeSquarePlus, action: () => editor.addShape(new SolidColorShape(new Rect(NaN, NaN, 100, 100))) })
             toolbar.push({ kind: "button", icon: mdiVectorPolylinePlus, action: () => editor.addShape(new ArrowShape()) })
             toolbar.push({ kind: "button", icon: mdiFormatAnnotationPlus, action: () => editor.addShape(new TextShape()) })
+            toolbar.push({ kind: "button", icon: mdiShapeCirclePlus, action: () => editor.addShape(new EllipseShape()) })
 
             if (target) {
                 toolbar.push({ kind: "separator" })
