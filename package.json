@@ -11,7 +11,7 @@
         "dotenv": "^16.3.1",
         "sass": "^1.63.6",
         "typescript": "^5.1.6",
-        "vite": "^4.4.3"
+        "vite": "^4.4.12"
     },
     "scripts": {
         "dev": "concurrently --raw --kill-others \"vite\" \"tsc --noEmit --watch --incremental --preserveWatchOutput\"",
