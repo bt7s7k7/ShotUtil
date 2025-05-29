@@ -1,3 +1,4 @@
+import { unreachable } from "../../comTypes/util"
 import { Board } from "../board/Board"
 import { BoardObject } from "../board/BoardObject"
 import { createSvgElement, HIGHLIGHT_COLOR, TRANSPARENT } from "../board/support"
@@ -11,6 +12,18 @@ export abstract class EditableObject extends BoardObject {
 
     protected abstract _flushGeometry(shape: SVGElement): void
     protected abstract _flushStyle(shape: SVGElement): void
+
+    public rebuildHandles() {
+        if (this._handleContainer == null) return
+        this._handleContainer.remove()
+
+        this._handleContainer = createSvgElement("g")
+        for (const handle of this._getHandles()) {
+            this._handleContainer.append(handle.getElement())
+            handle.flush()
+        }
+        this.board.controlHost.append(this._handleContainer)
+    }
 
     public override init(board: Board): void {
         super.init(board)

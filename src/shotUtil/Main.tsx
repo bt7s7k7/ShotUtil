@@ -33,12 +33,20 @@ export const Main = (defineComponent({
         function addLine() {
             const line = new LineObject()
             line.points.push(
-                new Point(-100, -100),
-                new Point(100, 100),
+                new Point(-100, -100).floor().add(0.5, 0.5),
+                new Point(100, 100).floor().add(0.5, 0.5),
             )
             line.flushChanges()
             board.addObjectWithUndo(line)
         }
+
+        useEventListener(window, "contextmenu", (event)=>{
+            if (board.dragActivity) {
+                event.preventDefault()
+                board.dragActivity.interrupt()
+                return
+            }
+        })
 
         useEventListener(window, "keypress", (event) => {
             if (event.code == "KeyY" && event.ctrlKey) {
@@ -48,6 +56,11 @@ export const Main = (defineComponent({
             }
 
             if (event.code == "Delete") {
+                if (board.dragActivity) {
+                    board.dragActivity.delete()
+                    return
+                }
+
                 if (board.selected != null) {
                     board.removeObjectWithUndo(board.selected)
                 }

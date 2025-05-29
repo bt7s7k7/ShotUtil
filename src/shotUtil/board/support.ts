@@ -13,7 +13,7 @@ export function createSvgElement<TTagName extends keyof SVGElementTagNameMap>(ta
 export function applyPositionAndSize(element: SVGElement, position: Point | null, size: Point | null) {
     if (element instanceof SVGRectElement) {
         if (position && size) {
-            position = position.add(size.mul(-0.5)).floor()
+            position = position.add(size.mul(-0.5)).floor().add(0.5, 0.5)
         }
 
         if (position) {

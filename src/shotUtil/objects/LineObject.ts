@@ -1,12 +1,14 @@
 import { cloneArray } from "../../comTypes/util"
 import { Point } from "../../drawer/Point"
 import { useGrab } from "../../vue3gui/useGrab"
-import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR } from "../board/support"
+import { Board, DragActivity } from "../board/Board"
+import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from "../board/support"
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
 import { HandleObject } from "../editable/HandleObject"
 
 const MIN_SELECTABLE_LINE_WIDTH = 6
+const ADD_WAYPOINT_HANDLE_OFFSET = 35
 
 export class LineOutlineHandle extends HandleObject {
     protected _element: SVGPolylineElement | null = null
@@ -15,12 +17,21 @@ export class LineOutlineHandle extends HandleObject {
         if (this._element == null) {
             this._element = createSvgElement("polyline")
 
+            this._element.setAttribute("fill", "none")
             this._element.setAttribute("stroke", HIGHLIGHT_COLOR)
             this._element.style.cursor = "pointer"
 
             const owner = this.owner
+            const dragActivity = new DragActivity()
             const handler = useGrab({
                 onMoveStart(event) {
+                    owner.board.dragActivity = dragActivity
+                    dragActivity.interrupted = false
+                    dragActivity.deleteHandler = () => {
+                        owner.board.removeObjectWithUndo(owner)
+                    }
+                    dragActivity.interruptHandler = event.forceStop
+
                     event.nativeEvent.stopPropagation()
                     return cloneArray(owner.points)
                 },
@@ -31,6 +42,14 @@ export class LineOutlineHandle extends HandleObject {
                     owner.flushChanges()
                 },
                 onMoveEnd(_, state) {
+                    owner.board.dragActivity = null
+
+                    if (dragActivity.interrupted) {
+                        owner.points = state
+                        owner.flushChanges()
+                        return
+                    }
+
                     owner.board.undoSteps.push(() => {
                         owner.board.select(owner)
                         owner.points = state
@@ -48,11 +67,94 @@ export class LineOutlineHandle extends HandleObject {
         const element = this.getElement()
         element.setAttribute("stroke-width", Math.max(MIN_SELECTABLE_LINE_WIDTH, this.owner.width) + "px")
         element.setAttribute("points", this.owner["_getRenderShape"]().getAttribute("points")!)
-
     }
 
     constructor(
         public readonly owner: LineObject,
+    ) { super(owner) }
+}
+
+export class LineAddWaypointHandle extends HandleObject {
+    protected _element: SVGRectElement | null = null
+    public override getElement(): SVGElement {
+        if (this._element == null) {
+            this._element = createSvgElement("rect")
+            this._element.setAttribute("fill", SECONDARY_COLOR)
+            this._element.setAttribute("stroke", PRIMARY_COLOR)
+            this._element.style.cursor = "pointer"
+
+            const dragActivity = new DragActivity()
+            const { owner, index } = this
+            const handler = useGrab({
+                onMoveStart: (event) => {
+                    owner.board.dragActivity = dragActivity
+                    dragActivity.interrupted = false
+                    dragActivity.deleteHandler = null
+                    dragActivity.interruptHandler = event.forceStop
+
+                    event.nativeEvent.stopPropagation()
+                    const newPosition = owner.board.snapPoint(this._getPosition()).floor().add(0.5, 0.5)
+                    owner.points.splice(index, 0, newPosition)
+                    owner.rebuildHandles()
+                    return owner.points[index]
+                },
+                onMove(event, state) {
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    if (delta.isZero()) return
+                    owner.points[index] = state.add(delta).floor().add(0.5, 0.5)
+                    owner.flushChanges()
+                },
+                onMoveEnd() {
+                    owner.board.dragActivity = null
+
+                    if (dragActivity.interrupted) {
+                        owner.points.splice(index, 1)
+                        owner.rebuildHandles()
+                        owner.flushChanges()
+                        return
+                    }
+
+                    owner.board.undoSteps.push(() => {
+                        owner.board.select(owner)
+                        owner.points.splice(index, 1)
+                        owner.rebuildHandles()
+                        owner.flushChanges()
+                    })
+                },
+            })
+
+            this._element.addEventListener("mousedown", handler)
+        }
+
+        return this._element
+    }
+
+    protected _getPosition() {
+        if (this.index == this.owner.points.length) {
+            const last = this.owner.points.at(-1)!
+            const secondToLast = this.owner.points.at(-2)!
+            const vector = last.sub(secondToLast).normalize()
+            return last.add(vector.mul(ADD_WAYPOINT_HANDLE_OFFSET))
+        } else if (this.index == 0) {
+            const first = this.owner.points[0]
+            const second = this.owner.points[1]
+            const vector = first.sub(second).normalize()
+            return first.add(vector.mul(ADD_WAYPOINT_HANDLE_OFFSET))
+        } else {
+            const next = this.owner.points[this.index]
+            const prev = this.owner.points[this.index - 1]
+            return next.add(prev).mul(0.5)
+        }
+    }
+
+    public flush(): void {
+        const position = this._getPosition()
+        applyPositionAndSize(this.getElement(), position, new Point(8, 8))
+    }
+
+    constructor(
+        public readonly owner: LineObject,
+        public readonly index: number,
     ) { super(owner) }
 }
 
@@ -61,19 +163,46 @@ export class LineWaypointHandle extends DotHandleObject {
         if (this._element == null) {
             this._element = super.getElement() as SVGCircleElement
 
+            const dragActivity = new DragActivity()
             const { owner, index } = this
             const handler = useGrab({
                 onMoveStart(event) {
+                    const position = owner.points[index]
+
+                    owner.board.dragActivity = dragActivity
+                    dragActivity.interrupted = false
+                    dragActivity.deleteHandler = () => {
+                        owner.points.splice(index, 1)
+
+                        owner.board.undoSteps.push(() => {
+                            owner.points.splice(index, 0, position)
+                            owner.rebuildHandles()
+                            owner.flushChanges()
+                        })
+
+                        owner.rebuildHandles()
+                        owner.flushChanges()
+                    }
+                    dragActivity.interruptHandler = event.forceStop
+
                     event.nativeEvent.stopPropagation()
-                    return owner.points[index]
+                    return position
                 },
                 onMove(event, state) {
                     const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
                     if (delta.isZero()) return
-                    owner.points[index] = state.add(delta)
+                    owner.points[index] = state.add(delta).floor().add(0.5, 0.5)
                     owner.flushChanges()
                 },
                 onMoveEnd(_, state) {
+                    owner.board.dragActivity = null
+
+                    if (dragActivity.interrupted) {
+                        owner.points[index] = state
+                        owner.flushChanges()
+                        return
+                    }
+
                     owner.board.undoSteps.push(() => {
                         owner.board.select(owner)
                         owner.points[index] = state
@@ -103,11 +232,19 @@ export class LineObject extends EditableObject {
     public points: Point[] = []
     public width = 1
 
+    public override rebuildHandles(): void {
+        if (this._handles == null) return
+        this._handles = null
+        super.rebuildHandles()
+    }
+
     protected _handles: HandleObject[] | null = null
     protected override _getHandles(): HandleObject[] {
         return this._handles ??= [
             new LineOutlineHandle(this),
             ...this.points.map((_, i) => new LineWaypointHandle(this, i)),
+            ...this.points.map((_, i) => new LineAddWaypointHandle(this, i)),
+            new LineAddWaypointHandle(this, this.points.length),
         ]
     }
 
@@ -131,5 +268,6 @@ export class LineObject extends EditableObject {
     protected override _flushStyle(shape: SVGElement): void {
         shape.setAttribute("stroke", "white")
         shape.setAttribute("stroke-width", `${this.width}px`)
+        shape.setAttribute("fill", "none")
     }
 }

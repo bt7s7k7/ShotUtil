@@ -3,6 +3,23 @@ import { Point } from "../../drawer/Point"
 import { BoardObject } from "./BoardObject"
 import { createSvgElement } from "./support"
 
+export class DragActivity {
+    public interrupted = false
+
+    public interruptHandler: (() => void) | null = null
+    public deleteHandler: (() => void) | null = null
+
+    public delete() {
+        this.interrupt()
+        this.deleteHandler?.()
+    }
+
+    public interrupt() {
+        this.interrupted = true
+        this.interruptHandler?.()
+    }
+}
+
 export class Board {
     public readonly boardHost: SVGElement
     public readonly renderHost: SVGElement
@@ -14,6 +31,8 @@ export class Board {
     public snapPoint(point: Point) {
         return point.mul(1 / this.snapGridSize).floor().mul(this.snapGridSize)
     }
+
+    public dragActivity: DragActivity | null = null
 
     public undoSteps: (() => void)[] = []
     public undo() {

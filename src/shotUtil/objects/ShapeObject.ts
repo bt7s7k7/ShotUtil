@@ -1,5 +1,6 @@
 import { Point } from "../../drawer/Point"
 import { useGrab } from "../../vue3gui/useGrab"
+import { DragActivity } from "../board/Board"
 import { applyPositionAndSize, createSvgElement, PRIMARY_COLOR, SECONDARY_COLOR, TRANSPARENT } from "../board/support"
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
@@ -20,9 +21,17 @@ export class OutlineHandle extends HandleObject {
 
             this._element.setAttribute("fill", TRANSPARENT)
 
+            const dragActivity = new DragActivity()
             const owner = this.owner
             const handler = useGrab({
                 onMoveStart(event) {
+                    owner.board.dragActivity = dragActivity
+                    dragActivity.interrupted = false
+                    dragActivity.deleteHandler = () => {
+                        owner.board.removeObjectWithUndo(owner)
+                    }
+                    dragActivity.interruptHandler = event.forceStop
+
                     event.nativeEvent.stopPropagation()
                     return owner.position
                 },
@@ -33,6 +42,14 @@ export class OutlineHandle extends HandleObject {
                     owner.flushChanges()
                 },
                 onMoveEnd(_, state) {
+                    owner.board.dragActivity = null
+
+                    if (dragActivity.interrupted) {
+                        owner.position = state
+                        owner.flushChanges()
+                        return
+                    }
+
                     owner.board.undoSteps.push(() => {
                         owner.board.select(owner)
                         owner.position = state
@@ -63,12 +80,18 @@ export class ResizeHandle extends DotHandleObject {
             this._element = super.getElement() as SVGCircleElement
             this._element.style.cursor = this.cursor
 
-            const owner = this.owner
-            const direction = this.direction
-
+            const dragActivity = new DragActivity()
+            const { owner, direction } = this
             const handler = useGrab({
                 cursor: this.cursor,
                 onMoveStart(event) {
+                    owner.board.dragActivity = dragActivity
+                    dragActivity.interrupted = false
+                    dragActivity.deleteHandler = () => {
+                        owner.board.removeObjectWithUndo(owner)
+                    }
+                    dragActivity.interruptHandler = event.forceStop
+
                     event.nativeEvent.stopPropagation()
                     return [owner.position, owner.size]
                 },
@@ -105,6 +128,15 @@ export class ResizeHandle extends DotHandleObject {
                     owner.flushChanges()
                 },
                 onMoveEnd(_, [position, size]) {
+                    owner.board.dragActivity = null
+
+                    if (dragActivity.interrupted) {
+                        owner.position = position
+                        owner.size = size
+                        owner.flushChanges()
+                        return
+                    }
+
                     owner.board.undoSteps.push(() => {
                         owner.board.select(owner)
                         owner.position = position
@@ -163,7 +195,5 @@ export abstract class ShapeObject extends EditableObject {
 
     constructor() {
         super()
-
-
     }
 }
