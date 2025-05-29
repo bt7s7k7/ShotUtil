@@ -1,0 +1,53 @@
+import { arrayRemove, unreachable } from "../../comTypes/util"
+import { Point } from "../../drawer/Point"
+import { BoardObject } from "./BoardObject"
+import { createSvgElement } from "./support"
+
+export class Board {
+    public readonly boardHost: SVGElement
+    public readonly renderHost: SVGElement
+    public readonly selectionHost: SVGElement
+    public readonly controlHost: SVGElement
+    public readonly objects: BoardObject[] = []
+
+    public snapGridSize = 10
+    public snapPoint(point: Point) {
+        return point.mul(1 / this.snapGridSize).floor().mul(this.snapGridSize)
+    }
+
+    protected _selected: BoardObject | null = null
+    public get selected() { return this._selected }
+    public select(object: BoardObject | null) {
+        if (this._selected == object) return
+        this._selected?.setSelectedState(false)
+        object?.setSelectedState(true)
+        this._selected = object
+    }
+
+    public addObject(object: BoardObject) {
+        this.objects.push(object)
+        object.init(this)
+    }
+
+    public removeObject(object: BoardObject) {
+        arrayRemove(this.objects, object) || unreachable()
+        object.teardown()
+    }
+
+    constructor(
+    ) {
+        this.boardHost = createSvgElement("svg")
+        this.renderHost = createSvgElement("g")
+        this.renderHost.dataset.kind = "render"
+        this.selectionHost = createSvgElement("g")
+        this.selectionHost.dataset.kind = "selection"
+        this.controlHost = createSvgElement("g")
+        this.controlHost.dataset.kind = "control"
+
+        this.boardHost.append(this.renderHost, this.selectionHost, this.controlHost)
+
+        this.boardHost.addEventListener("click", () => {
+            this.select(null)
+        })
+    }
+}

@@ -1,0 +1,154 @@
+import { Point } from "../../drawer/Point"
+import { useGrab } from "../../vue3gui/useGrab"
+import { applyPositionAndSize, createSvgElement, PRIMARY_COLOR, SECONDARY_COLOR, TRANSPARENT } from "../board/support"
+import { DotHandleObject } from "../editable/DotHandleObject"
+import { EditableObject } from "../editable/EditableObject"
+import { HandleObject } from "../editable/HandleObject"
+
+export class OutlineHandle extends HandleObject {
+    protected _element: SVGRectElement | null = null
+    public override getElement(): SVGElement {
+        if (this._element == null) {
+            this._element = createSvgElement("rect")
+
+            if (this.primary) {
+                this._element.setAttribute("stroke", PRIMARY_COLOR)
+                this._element.setAttribute("stroke-dasharray", "5 5")
+            } else {
+                this._element.setAttribute("stroke", SECONDARY_COLOR)
+            }
+
+            this._element.setAttribute("fill", TRANSPARENT)
+
+            const owner = this.owner
+            const handler = useGrab({
+                onMoveStart(event) {
+                    event.nativeEvent.stopPropagation()
+                    return owner.position
+                },
+                onMove(event, state) {
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    if (delta.isZero()) return
+                    owner.position = state.add(delta)
+                    owner.flushChanges()
+                },
+            })
+            this._element.addEventListener("mousedown", handler)
+        }
+
+        return this._element
+    }
+
+    public override flush(): void {
+        const { position, size } = this.owner
+        applyPositionAndSize(this.getElement(), position, size)
+    }
+
+    constructor(
+        public readonly owner: ShapeObject,
+        public readonly primary: boolean,
+    ) { super(owner) }
+}
+
+export class ResizeHandle extends DotHandleObject {
+    public override getElement(): SVGElement {
+        if (this._element == null) {
+            this._element = super.getElement() as SVGCircleElement
+            this._element.style.cursor = this.cursor
+
+            const owner = this.owner
+            const direction = this.direction
+
+            const handler = useGrab({
+                cursor: this.cursor,
+                onMoveStart(event) {
+                    event.nativeEvent.stopPropagation()
+                    return [owner.position, owner.size]
+                },
+                onMove(event, [position, size]) {
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    if (delta.isZero()) return
+
+                    let newSize = owner.size
+                    let newPosition = owner.position
+                    for (const i of ["x", "y"] as const) {
+                        const mul = direction[i]
+                        if (mul == 0) continue
+
+                        if (mul > 0) {
+                            newSize = newSize.with(i, size[i] + delta[i])
+                            newPosition = newPosition.with(i, position[i] + delta[i] * 0.5)
+                        } else {
+                            newSize = newSize.with(i, size[i] - delta[i])
+                            newPosition = newPosition.with(i, position[i] + delta[i] * 0.5)
+                        }
+                    }
+                    if (newSize.x < 10) {
+                        newSize = newSize.with("x", 10)
+                        newPosition = newPosition.with("x", owner.position.x)
+                    }
+
+                    if (newSize.y < 10) {
+                        newSize = newSize.with("y", 10)
+                        newPosition = newPosition.with("y", owner.position.y)
+                    }
+
+                    owner.size = newSize
+                    owner.position = newPosition
+                    owner.flushChanges()
+                },
+            })
+
+            this._element.addEventListener("mousedown", handler)
+        }
+        return super.getElement()
+    }
+
+    public override flush(): void {
+        const { position, size } = this.owner
+        const alignedPosition = this.direction.mul(0.5).scale(size).add(position)
+        applyPositionAndSize(this.getElement(), alignedPosition, null)
+    }
+
+    constructor(
+        public readonly owner: ShapeObject,
+        public readonly direction: Point,
+        public readonly cursor: string,
+    ) { super(owner) }
+}
+
+
+export abstract class ShapeObject extends EditableObject {
+    public position: Point = Point.zero
+    public size: Point = Point.zero
+
+    protected _handles: HandleObject[] | null = null
+    protected override _getHandles(): HandleObject[] {
+        return this._handles ??= [
+            new OutlineHandle(this, false),
+            new OutlineHandle(this, true),
+            new ResizeHandle(this, Point.up, "n-resize"),
+            new ResizeHandle(this, Point.right, "e-resize"),
+            new ResizeHandle(this, Point.down, "s-resize"),
+            new ResizeHandle(this, Point.left, "w-resize"),
+            new ResizeHandle(this, Point.up.add(Point.right), "ne-resize"),
+            new ResizeHandle(this, Point.right.add(Point.down), "se-resize"),
+            new ResizeHandle(this, Point.down.add(Point.left), "sw-resize"),
+            new ResizeHandle(this, Point.left.add(Point.up), "nw-resize"),
+        ]
+    }
+
+    protected override _getSelectionElement(): SVGElement {
+        if (this._selectionElement == null) {
+            super._getSelectionElement().setAttribute("stroke-width", "4px")
+        }
+
+        return super._getSelectionElement()
+    }
+
+    constructor() {
+        super()
+
+
+    }
+}

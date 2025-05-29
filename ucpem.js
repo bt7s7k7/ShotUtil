@@ -3,5 +3,7 @@
 const { project, github } = require("ucpem")
 
 project.prefix("src").res("shotUtil",
-    github("bt7s7k7/Vue3GUI").res("vue3gui")
+    github("bt7s7k7/Drawer").res("drawer"),
+    github("bt7s7k7/CommonTypes").res("comTypes"),
+    github("bt7s7k7/Vue3GUI").res("vue3gui"),
 )
