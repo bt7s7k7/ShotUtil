@@ -19,7 +19,7 @@ export abstract class EditableObject extends BoardObject {
     }
 
     public override teardown(): void {
-        this._handleContainer?.remove()
+        if (this._handleContainer) this.setSelectedState(false)
         this._getRenderShape().remove()
         this._getSelectionElement().remove()
     }

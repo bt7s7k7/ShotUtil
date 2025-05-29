@@ -42,7 +42,19 @@ export class Board {
         object.init(this)
     }
 
+    public removeObjectWithUndo(object: BoardObject) {
+        this.removeObject(object)
+        this.undoSteps.push(() => {
+            this.addObject(object)
+            this.select(object)
+        })
+    }
+
     public removeObject(object: BoardObject) {
+        if (object == this.selected) {
+            this.select(null)
+        }
+
         arrayRemove(this.objects, object) || unreachable()
         object.teardown()
     }

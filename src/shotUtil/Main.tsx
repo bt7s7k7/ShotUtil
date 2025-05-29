@@ -44,6 +44,13 @@ export const Main = (defineComponent({
             if (event.code == "KeyY" && event.ctrlKey) {
                 event.preventDefault()
                 board.undo()
+                return
+            }
+
+            if (event.code == "Delete") {
+                if (board.selected != null) {
+                    board.removeObjectWithUndo(board.selected)
+                }
             }
         })
 
