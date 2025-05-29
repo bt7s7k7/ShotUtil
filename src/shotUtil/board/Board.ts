@@ -15,6 +15,12 @@ export class Board {
         return point.mul(1 / this.snapGridSize).floor().mul(this.snapGridSize)
     }
 
+    public undoSteps: (() => void)[] = []
+    public undo() {
+        const step = this.undoSteps.pop()
+        step?.()
+    }
+
     protected _selected: BoardObject | null = null
     public get selected() { return this._selected }
     public select(object: BoardObject | null) {
@@ -22,6 +28,13 @@ export class Board {
         this._selected?.setSelectedState(false)
         object?.setSelectedState(true)
         this._selected = object
+    }
+
+    public addObjectWithUndo(object: BoardObject) {
+        this.addObject(object)
+        this.undoSteps.push(() => {
+            this.removeObject(object)
+        })
     }
 
     public addObject(object: BoardObject) {

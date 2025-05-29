@@ -3,7 +3,7 @@ import { defineComponent } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
 import { MountNode } from "../vue3gui/MountNode"
-import { useResizeWatcher } from "../vue3gui/util"
+import { useEventListener, useResizeWatcher } from "../vue3gui/util"
 import { Board } from "./board/Board"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
@@ -27,7 +27,7 @@ export const Main = (defineComponent({
             const rect = new RectObject()
             rect.size = new Point(100,100)
             rect.flushChanges()
-            board.addObject(rect)
+            board.addObjectWithUndo(rect)
         } 
 
         function addLine() {
@@ -37,8 +37,15 @@ export const Main = (defineComponent({
                 new Point(100, 100),
             )
             line.flushChanges()
-            board.addObject(line)
+            board.addObjectWithUndo(line)
         }
+
+        useEventListener(window, "keypress", (event) => {
+            if (event.code == "KeyY" && event.ctrlKey) {
+                event.preventDefault()
+                board.undo()
+            }
+        })
 
         return () => (
             <div class="flex-fill flex column">

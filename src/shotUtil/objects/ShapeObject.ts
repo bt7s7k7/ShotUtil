@@ -32,6 +32,13 @@ export class OutlineHandle extends HandleObject {
                     owner.position = state.add(delta)
                     owner.flushChanges()
                 },
+                onMoveEnd(_, state) {
+                    owner.board.undoSteps.push(() => {
+                        owner.board.select(owner)
+                        owner.position = state
+                        owner.flushChanges()
+                    })
+                },
             })
             this._element.addEventListener("mousedown", handler)
         }
@@ -96,6 +103,14 @@ export class ResizeHandle extends DotHandleObject {
                     owner.size = newSize
                     owner.position = newPosition
                     owner.flushChanges()
+                },
+                onMoveEnd(_, [position, size]) {
+                    owner.board.undoSteps.push(() => {
+                        owner.board.select(owner)
+                        owner.position = position
+                        owner.size = size
+                        owner.flushChanges()
+                    })
                 },
             })
 

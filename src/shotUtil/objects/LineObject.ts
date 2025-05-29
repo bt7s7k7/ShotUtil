@@ -30,6 +30,13 @@ export class LineOutlineHandle extends HandleObject {
                     owner.points = state.map(v => v.add(delta))
                     owner.flushChanges()
                 },
+                onMoveEnd(_, state) {
+                    owner.board.undoSteps.push(() => {
+                        owner.board.select(owner)
+                        owner.points = state
+                        owner.flushChanges()
+                    })
+                },
             })
             this._element.addEventListener("mousedown", handler)
         }
@@ -65,6 +72,13 @@ export class LineWaypointHandle extends DotHandleObject {
                     if (delta.isZero()) return
                     owner.points[index] = state.add(delta)
                     owner.flushChanges()
+                },
+                onMoveEnd(_, state) {
+                    owner.board.undoSteps.push(() => {
+                        owner.board.select(owner)
+                        owner.points[index] = state
+                        owner.flushChanges()
+                    })
                 },
             })
 
