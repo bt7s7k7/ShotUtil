@@ -52,8 +52,10 @@ export abstract class MarkerObject extends BoardObject {
         this._getMarkerElement().remove()
     }
 
-    public setSelectedState(selected: boolean) { }
-    public flushChanges() { }
+    public override setSelectedState(selected: boolean) { }
+    public override flushChanges() { }
+    public override moveToBack() { }
+    public override moveToFront() { }
 
     constructor(
         protected readonly _markerOptions: Record<string, string>,

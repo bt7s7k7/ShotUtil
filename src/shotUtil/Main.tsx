@@ -1,4 +1,4 @@
-import { mdiArrowLeft, mdiArrowRight, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { computed, defineComponent, ref, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
@@ -207,6 +207,14 @@ export const Main = (defineComponent({
             addImages(files)
         }
 
+        function moveToBack() {
+            board.selected?.moveToBack()
+        }
+        
+        function moveToFront() {
+            board.selected?.moveToFront()
+        }
+
         return () => (
             <UploadOverlay class="flex-fill flex column" onDrop={addImages}
             // @ts-ignore
@@ -217,6 +225,8 @@ export const Main = (defineComponent({
                         <_ShapeAdder icon={mdiShapeSquarePlus} label="Add Rectangle" nudge onCreate={addRect} />
                         <_ShapeAdder icon={mdiVectorPolylinePlus} label="Add Line" onCreate={addLine} />
                         {board.selected && <>
+                            <Button icon={mdiArrangeBringToFront} v-label="Bring to front" onClick={moveToFront} />
+                            <Button icon={mdiArrangeSendToBack} v-label="Send to back" onClick={moveToBack} />
                             <div class="border-left"></div>
                             {ColorProperty.has(board.selected) && <div class="flex row center gap-2">
                                 {COLORS.map(color => (

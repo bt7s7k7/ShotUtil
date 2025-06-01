@@ -9,4 +9,7 @@ export abstract class BoardObject {
         this.board = board
     }
     public teardown() { }
+
+    public abstract moveToBack(): void
+    public abstract moveToFront(): void
 }

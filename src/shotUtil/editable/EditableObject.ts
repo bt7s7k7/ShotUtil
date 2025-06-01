@@ -1,4 +1,3 @@
-import { unreachable } from "../../comTypes/util"
 import { Board } from "../board/Board"
 import { BoardObject } from "../board/BoardObject"
 import { createSvgElement, HIGHLIGHT_COLOR, TRANSPARENT } from "../board/support"
@@ -87,6 +86,20 @@ export abstract class EditableObject extends BoardObject {
             for (const handle of this._getHandles()) {
                 handle.flush()
             }
+        }
+    }
+
+    public override moveToBack() {
+        for (const element of [this._getRenderShape(), this._getSelectionElement()]) {
+            const parent = element.parentElement!
+            parent.insertBefore(element, parent.firstChild)
+        }
+    }
+
+    public override moveToFront() {
+        for (const element of [this._getRenderShape(), this._getSelectionElement()]) {
+            const parent = element.parentElement!
+            parent.append(element)
         }
     }
 }
