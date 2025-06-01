@@ -1,6 +1,7 @@
 import { cloneArray } from "../../comTypes/util"
 import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
+import { Rect } from "../../drawer/Rect"
 import { useGrab } from "../../vue3gui/useGrab"
 import { DragActivity } from "../board/Board"
 import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from "../board/support"
@@ -60,6 +61,7 @@ export class LineOutlineHandle extends HandleObject {
                     if (delta.isZero()) return
                     target.points = state.map(v => v.add(delta))
                     target.flushChanges()
+                    target.board.updateBounds()
                 },
                 onMoveEnd(_, [target, state]) {
                     target.board.dragActivity = null
@@ -75,6 +77,7 @@ export class LineOutlineHandle extends HandleObject {
                             target.board.select(target)
                             target.points = state
                             target.flushChanges()
+                            target.board.updateBounds()
                         })
                     } else {
                         target.board.undoSteps.push(() => {
@@ -129,6 +132,7 @@ export class LineAddWaypointHandle extends HandleObject {
                     if (delta.isZero()) return
                     owner.points[index] = state.add(delta).floor().add(0.5, 0.5)
                     owner.flushChanges()
+                    owner.board.updateBounds()
                 },
                 onMoveEnd() {
                     owner.board.dragActivity = null
@@ -137,6 +141,7 @@ export class LineAddWaypointHandle extends HandleObject {
                         owner.points.splice(index, 1)
                         owner.rebuildHandles()
                         owner.flushChanges()
+                        owner.board.updateBounds()
                         return
                     }
 
@@ -145,6 +150,7 @@ export class LineAddWaypointHandle extends HandleObject {
                         owner.points.splice(index, 1)
                         owner.rebuildHandles()
                         owner.flushChanges()
+                        owner.board.updateBounds()
                     })
                 },
             })
@@ -235,6 +241,7 @@ export class LineWaypointHandle extends DotHandleObject {
                     if (delta.isZero()) return
                     target.points[index] = state.add(delta).floor().add(0.5, 0.5)
                     target.flushChanges()
+                    target.board.updateBounds()
                 },
                 onMoveEnd(_, [target, state]) {
                     target.board.dragActivity = null
@@ -242,6 +249,7 @@ export class LineWaypointHandle extends DotHandleObject {
                     if (dragActivity.interrupted) {
                         target.points[index] = state
                         target.flushChanges()
+                        target.board.updateBounds()
                         return
                     }
 
@@ -250,6 +258,7 @@ export class LineWaypointHandle extends DotHandleObject {
                             target.board.select(target)
                             target.points[index] = state
                             target.flushChanges()
+                            target.board.updateBounds()
                         })
                     } else {
                         target.board.undoSteps.push(() => {
@@ -369,5 +378,9 @@ export class LineObject extends EditableObject {
         clone.points = cloneArray(this.points)
 
         return clone
+    }
+
+    public override getBoundingBox() {
+        return Rect.union(this.points)
     }
 }

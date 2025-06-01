@@ -1,4 +1,4 @@
-import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFlipHorizontal, mdiFlipVertical, mdiFormatAlignCenter, mdiFormatAlignLeft, mdiFormatAlignRight, mdiFormatColorFill, mdiFormatLineWeight, mdiFormatSize, mdiFormatVerticalAlignBottom, mdiFormatVerticalAlignCenter, mdiFormatVerticalAlignTop, mdiShapeCirclePlus, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFileExportOutline, mdiFlipHorizontal, mdiFlipVertical, mdiFormatAlignCenter, mdiFormatAlignLeft, mdiFormatAlignRight, mdiFormatColorFill, mdiFormatLineWeight, mdiFormatSize, mdiFormatVerticalAlignBottom, mdiFormatVerticalAlignCenter, mdiFormatVerticalAlignTop, mdiShapeCirclePlus, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { computed, defineComponent, PropType, Ref, ref, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
@@ -101,7 +101,7 @@ const _EnumProperty = defineComponent({
         const property = props.property as typeof Property
 
         watch(() => props.board.selected, selected => {
-            if (!property.has(selected)) return
+            if (!selected || !property.has(selected)) return
             value.value = property.get(selected).value
         }, {immediate: true})
 
@@ -147,7 +147,7 @@ export const Main = (defineComponent({
         watch(() => [absoluteOffset.value, absoluteZoom.value] as const, ([{ x, y }, zoom]) => {
             board.eventScale = 1 / zoom
 
-            for (const group of [board.renderHost, board.selectionHost, board.controlHost]) {
+            for (const group of [board.renderHost, board.selectionHost, board.controlHost, board.boundsObject]) {
                 group.setAttribute("transform", `translate(${x}, ${y}) scale(${zoom})`)
             }
         }, { immediate: true })
@@ -359,6 +359,17 @@ export const Main = (defineComponent({
             board.selected?.moveToFront()
         }
 
+        function exportSVG() {
+            const svg = board.export()
+            const data =new Blob([new TextEncoder().encode(svg)], {type: "image/svg+xml" })
+            const url = URL.createObjectURL(data)
+            window.open(url, "_blank")
+            setTimeout(() => {
+                URL.revokeObjectURL(url)
+            }, 100)
+            //const url = `data:image/svg+xml,${encodeURIComponent(svg)}`
+        }
+
         return () => (
             <UploadOverlay class="flex-fill flex column" onDrop={addImages}
             // @ts-ignore
@@ -409,6 +420,8 @@ export const Main = (defineComponent({
                                 ]} property={VerticalAlignProperty} />
                             )}
                         </>}
+                        <div class="flex-fill"></div>
+                        <Button icon={mdiFileExportOutline} v-label:bottom-left="Export SVG" onClick={exportSVG} />
                     </ButtonGroup>
                 </div>
                 <div class="flex-fill" onMousedown={dragViewport} onPointerdown={stopPropagation}>

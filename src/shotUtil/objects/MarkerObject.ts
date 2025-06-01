@@ -1,3 +1,4 @@
+import { Rect } from "../../drawer/Rect"
 import { Board } from "../board/Board"
 import { BoardObject } from "../board/BoardObject"
 import { createSvgElement } from "../board/support"
@@ -20,6 +21,10 @@ export abstract class MarkerObject extends BoardObject {
         if (this._refCount <= 0) {
             this.board.removeObject(this)
         }
+    }
+
+    public override getBoundingBox() {
+        return null
     }
 
     protected _markerElement: SVGMarkerElement | null = null

@@ -1,5 +1,6 @@
 import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
+import { Rect } from "../../drawer/Rect"
 import { useGrab } from "../../vue3gui/useGrab"
 import { DragActivity } from "../board/Board"
 import { applyPositionAndSize, createSvgElement, PRIMARY_COLOR, SECONDARY_COLOR, TRANSPARENT } from "../board/support"
@@ -59,6 +60,7 @@ export class OutlineHandle extends HandleObject {
                     if (delta.isZero()) return
                     target.position = state.add(delta)
                     target.flushChanges()
+                    target.board.updateBounds()
                 },
                 onMoveEnd(_, [target, state]) {
                     target.board.dragActivity = null
@@ -66,6 +68,7 @@ export class OutlineHandle extends HandleObject {
                     if (dragActivity.interrupted) {
                         target.position = state
                         target.flushChanges()
+                        target.board.updateBounds()
                         return
                     }
 
@@ -74,6 +77,7 @@ export class OutlineHandle extends HandleObject {
                             target.board.select(target)
                             target.position = state
                             target.flushChanges()
+                            target.board.updateBounds()
                         })
                     } else {
                         target.board.undoSteps.push(() => {
@@ -151,6 +155,7 @@ export class ResizeHandle extends DotHandleObject {
                     owner.size = newSize
                     owner.position = newPosition
                     owner.flushChanges()
+                    owner.board.updateBounds()
                 },
                 onMoveEnd(_, [position, size]) {
                     owner.board.dragActivity = null
@@ -159,6 +164,7 @@ export class ResizeHandle extends DotHandleObject {
                         owner.position = position
                         owner.size = size
                         owner.flushChanges()
+                        owner.board.updateBounds()
                         return
                     }
 
@@ -167,6 +173,7 @@ export class ResizeHandle extends DotHandleObject {
                         owner.position = position
                         owner.size = size
                         owner.flushChanges()
+                        owner.board.updateBounds()
                     })
                 },
             })
@@ -256,6 +263,10 @@ export abstract class ShapeObject extends EditableObject {
         clone.size = this.size
 
         return clone
+    }
+
+    public override getBoundingBox() {
+        return Rect.extends(this.position, this.size)
     }
 
     constructor() {

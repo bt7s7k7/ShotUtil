@@ -1,8 +1,9 @@
 import { shallowReactive } from "vue"
-import { arrayRemove, unreachable } from "../../comTypes/util"
+import { arrayRemove, autoFilter, unreachable } from "../../comTypes/util"
 import { Point } from "../../drawer/Point"
+import { Rect } from "../../drawer/Rect"
 import { BoardObject } from "./BoardObject"
-import { createSvgElement } from "./support"
+import { applyPositionAndSize, createSvgElement } from "./support"
 
 export class DragActivity {
     public interrupted = false
@@ -26,7 +27,10 @@ export class Board {
     public readonly renderHost: SVGElement
     public readonly selectionHost: SVGElement
     public readonly controlHost: SVGElement
+    public readonly boundsObject: SVGRectElement
     public readonly objects: BoardObject[] = []
+
+    public bounds = Rect.zero
 
     public snapGridSize = 10
     public snapPoint(point: Point) {
@@ -63,6 +67,7 @@ export class Board {
         this.objects.push(object)
         object.init(this)
         object.flushChanges()
+        this.updateBounds()
     }
 
     public removeObjectWithUndo(object: BoardObject) {
@@ -80,6 +85,22 @@ export class Board {
 
         arrayRemove(this.objects, object) || unreachable()
         object.teardown()
+        this.updateBounds()
+    }
+
+    public getBoundingBox() {
+        const bounds = autoFilter(this.objects.map(v => v.getBoundingBox()))
+        if (bounds.length == 0) return Rect.zero
+        return Rect.union(bounds)
+    }
+
+    public updateBounds() {
+        this.bounds = this.getBoundingBox()
+        applyPositionAndSize(this.boundsObject, this.bounds.center(), this.bounds.size(), true)
+    }
+
+    public export() {
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${this.bounds.x} ${this.bounds.y} ${this.bounds.width} ${this.bounds.height}">${this.renderHost.innerHTML}</svg>`
     }
 
     constructor(
@@ -99,6 +120,12 @@ export class Board {
         this.boardHost.addEventListener("click", () => {
             self.select(null)
         })
+
+        this.boundsObject = createSvgElement("rect")
+        this.boundsObject.setAttribute("fill", "none")
+        this.boundsObject.setAttribute("stroke", "#555555")
+        this.boundsObject.setAttribute("stroke-dasharray", "5 5")
+        this.boardHost.insertBefore(this.boundsObject, this.boardHost.firstChild)
 
         return self
     }

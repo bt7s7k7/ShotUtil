@@ -40,6 +40,7 @@ export function applyPositionAndSize(element: SVGElement, position: Point | null
 
         if (enableStrokeCorrection) {
             position = position.add(0.5, 0.5)
+            size = new Point(Math.max(0, size.x - 1), Math.max(0, size.y - 1))
         }
     }
 

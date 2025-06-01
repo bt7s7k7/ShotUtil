@@ -1,4 +1,5 @@
 import { Constructor } from "../../comTypes/types"
+import { Rect } from "../../drawer/Rect"
 import { Board } from "./Board"
 
 export abstract class BoardObject {
@@ -13,6 +14,7 @@ export abstract class BoardObject {
 
     public abstract moveToBack(): void
     public abstract moveToFront(): void
+    public abstract getBoundingBox(): Rect | null
 
     public duplicate() {
         const clone = new (this.constructor as Constructor<this>)()
