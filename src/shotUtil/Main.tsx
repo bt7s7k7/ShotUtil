@@ -1,4 +1,4 @@
-import { mdiArrowLeft, mdiArrowRight, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrowLeft, mdiArrowRight, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { defineComponent } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
@@ -12,6 +12,7 @@ import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
 import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty"
 import { ColorProperty, COLORS } from "./properties/ColorProperty"
+import { FillProperty } from "./properties/FillProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
 
 export const Main = (defineComponent({
@@ -104,6 +105,13 @@ export const Main = (defineComponent({
                                     />
                                 </ButtonGroup>}
                             </div>
+                            {FillProperty.has(board.selected) && <ButtonGroup override>
+                                <ToggleButton
+                                    clear icon={mdiFormatColorFill} v-label="Start arrow"
+                                    vModel={FillProperty.get(board.selected).value}
+                                    enabledStyle={{ clear: false, variant: "success", class:"" }}
+                                />
+                            </ButtonGroup>}
                         </>}
                     </ButtonGroup>
                 </div>

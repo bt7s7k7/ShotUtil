@@ -1,3 +1,4 @@
+import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
 import { useGrab } from "../../vue3gui/useGrab"
 import { DragActivity } from "../board/Board"
@@ -5,6 +6,8 @@ import { applyPositionAndSize, createSvgElement, PRIMARY_COLOR, SECONDARY_COLOR,
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
 import { HandleObject } from "../editable/HandleObject"
+import { ColorProperty } from "../properties/ColorProperty"
+import { FillProperty } from "../properties/FillProperty"
 
 export class OutlineHandle extends HandleObject {
     protected _element: SVGRectElement | null = null
@@ -166,6 +169,8 @@ export class ResizeHandle extends DotHandleObject {
 
 
 export abstract class ShapeObject extends EditableObject {
+    public color = ColorProperty.add(this, Color.white)
+    public fill = FillProperty.add(this, true)
     public position: Point = Point.zero
     public size: Point = Point.zero
 
@@ -191,6 +196,35 @@ export abstract class ShapeObject extends EditableObject {
         }
 
         return super._getSelectionElement()
+    }
+
+    protected override _flushGeometry(shape: SVGElement): void {
+
+        if (shape == this._getSelectionElement()) {
+            if (this.fill) {
+                shape.setAttribute("stroke-width", "3")
+                shape.setAttribute("fill", TRANSPARENT)
+                applyPositionAndSize(shape, this.position, this.size)
+            } else {
+                shape.setAttribute("stroke-width", "8")
+                shape.setAttribute("fill", "none")
+                applyPositionAndSize(shape, this.position, this.size.add(-4, -4))
+            }
+        } else {
+            applyPositionAndSize(shape, this.position, this.size)
+        }
+    }
+
+    protected override _flushStyle(shape: SVGElement): void {
+        shape.setAttribute("stroke-width", "3")
+
+        if (this.fill) {
+            shape.setAttribute("stroke", "none")
+            shape.setAttribute("fill", this.color.toHex())
+        } else {
+            shape.setAttribute("stroke", this.color.toHex())
+            shape.setAttribute("fill", "none")
+        }
     }
 
     constructor() {
