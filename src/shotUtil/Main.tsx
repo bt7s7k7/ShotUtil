@@ -267,10 +267,10 @@ export const Main = (defineComponent({
                         <_ShapeAdder icon={mdiShapeSquarePlus} label="Add Rectangle" nudge onCreate={addRect} />
                         <_ShapeAdder icon={mdiVectorPolylinePlus} label="Add Line" onCreate={addLine} />
                         {board.selected && <>
+                            <div class="border-left border-secondary mx-2 h-4"></div>
+
                             <Button icon={mdiArrangeBringToFront} v-label="Bring to front" onClick={moveToFront} />
                             <Button icon={mdiArrangeSendToBack} v-label="Send to back" onClick={moveToBack} />
-
-                            <div class="border-left border-secondary mx-2 h-4"></div>
 
                             {ColorProperty.has(board.selected) && <div class="flex row center gap-2 mx-2">
                                 {COLORS.map(color => (
