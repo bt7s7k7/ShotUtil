@@ -2,7 +2,7 @@ import { cloneArray } from "../../comTypes/util"
 import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
 import { useGrab } from "../../vue3gui/useGrab"
-import { Board, DragActivity } from "../board/Board"
+import { DragActivity } from "../board/Board"
 import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from "../board/support"
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
@@ -238,8 +238,8 @@ export class LineObject extends EditableObject {
     public color = ColorProperty.add(this, Color.red)
     public points: Point[] = []
     public width = LineWidthProperty.add(this, LINE_WIDTHS[1])
-    public startArrow = StartArrowProperty.add(this, true)
-    public endArrow = EndArrowProperty.add(this, false)
+    public startArrow = StartArrowProperty.add(this, false)
+    public endArrow = EndArrowProperty.add(this, true)
 
     public override rebuildHandles(): void {
         if (this._handles == null) return

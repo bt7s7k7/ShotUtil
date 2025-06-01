@@ -17,6 +17,7 @@ import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty
 import { ColorProperty, COLORS } from "./properties/ColorProperty"
 import { FillProperty } from "./properties/FillProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
+import { Property } from "./properties/Property"
 
 const _ShapeAdder = defineComponent({
     name: "_ShapeAdder",
@@ -57,6 +58,28 @@ const _ShapeAdder = defineComponent({
             )
         )
     },
+})
+
+const _BooleanProperty = defineComponent({
+    name: "_BooleanProperty",
+    props: {
+        board: { type: Board, required:true },
+        property: { type: Function, required: true },
+        icon: { type: String, required: true },
+        label: { type: String, required: true },
+    },
+    setup(props, ctx) {
+        return () => <>
+            {(props.property as typeof Property).has(props.board.selected) && <ButtonGroup override>
+                <ToggleButton
+                    clear icon={props.icon} v-label={props.label}
+                    vModel={(props.property as typeof Property).get(props.board.selected).value as boolean}
+                    enabledStyle={{ clear: false, variant: "success", class: "" }}
+                />
+            </ButtonGroup>}
+        </>
+    },
+
 })
 
 export const Main = (defineComponent({
@@ -227,39 +250,23 @@ export const Main = (defineComponent({
                         {board.selected && <>
                             <Button icon={mdiArrangeBringToFront} v-label="Bring to front" onClick={moveToFront} />
                             <Button icon={mdiArrangeSendToBack} v-label="Send to back" onClick={moveToBack} />
-                            <div class="border-left"></div>
-                            {ColorProperty.has(board.selected) && <div class="flex row center gap-2">
+
+                            <div class="border-left border-secondary mx-2 h-4"></div>
+
+                            {ColorProperty.has(board.selected) && <div class="flex row center gap-2 mx-2">
                                 {COLORS.map(color => (
                                     <Button plain class="border border-white w-3 h-3" style={{ backgroundColor: color.toHex() }} onClick={() => ColorProperty.get(board.selected).value = color} />
                                 ))}
                             </div>}
+
                             {LineWidthProperty.has(board.selected) && <>
                                 <Icon icon={mdiFormatLineWeight} class="mx-2" />
                                 <Slider class="w-200" min={0} max={LINE_WIDTHS.length - 1} step={1} stepped vModel={LineWidthProperty.get(board.selected).index} />
                             </>}
-                            <div class="mx-2 flex row">
-                                {EndArrowProperty.has(board.selected) && <ButtonGroup override>
-                                    <ToggleButton
-                                        clear icon={mdiArrowLeft} v-label="Start arrow"
-                                        vModel={EndArrowProperty.get(board.selected).value}
-                                        enabledStyle={{ clear: false, variant: "success", class: "" }}
-                                    />
-                                </ButtonGroup>}
-                                {StartArrowProperty.has(board.selected) && <ButtonGroup override>
-                                    <ToggleButton
-                                        clear icon={mdiArrowRight} v-label="End arrow"
-                                        vModel={StartArrowProperty.get(board.selected).value}
-                                        enabledStyle={{ clear: false, variant: "success", class: "" }}
-                                    />
-                                </ButtonGroup>}
-                            </div>
-                            {FillProperty.has(board.selected) && <ButtonGroup override>
-                                <ToggleButton
-                                    clear icon={mdiFormatColorFill} v-label="Start arrow"
-                                    vModel={FillProperty.get(board.selected).value}
-                                    enabledStyle={{ clear: false, variant: "success", class: "" }}
-                                />
-                            </ButtonGroup>}
+
+                            <_BooleanProperty board={board} icon={mdiArrowLeft} label="Show arrow at start" property={StartArrowProperty} />
+                            <_BooleanProperty board={board} icon={mdiArrowRight} label="Show arrow at end" property={EndArrowProperty} />
+                            <_BooleanProperty board={board} icon={mdiFormatColorFill} label="Fill" property={FillProperty} />
                         </>}
                     </ButtonGroup>
                 </div>
