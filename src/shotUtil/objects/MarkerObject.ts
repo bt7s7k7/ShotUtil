@@ -39,6 +39,7 @@ export abstract class MarkerObject extends BoardObject {
     protected abstract _getRenderElement(): SVGElement
 
     public override init(board: Board) {
+        super.init(board)
         const marker = this._getMarkerElement()
         const render = this._getRenderElement()
         marker.append(render)
