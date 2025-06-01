@@ -39,4 +39,13 @@ export class ImageObject extends ShapeObject {
         }
     }
 
+    public override duplicate() {
+        const clone = super.duplicate()
+
+        clone.src = this.src
+        clone.nativeSize = this.nativeSize
+
+        return clone
+    }
+
 }

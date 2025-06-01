@@ -8,6 +8,6 @@ export class FillProperty extends Property<boolean, { fill: boolean } & BoardObj
 
     public set value(value) {
         this.owner.fill = value
-        this.owner.flushChanges()
+        if (this.owner.board) this.owner.flushChanges()
     }
 }

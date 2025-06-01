@@ -31,36 +31,56 @@ export class LineOutlineHandle extends HandleObject {
             const dragActivity = new DragActivity()
             const handler = useGrab({
                 onMoveStart(event) {
+                    let target = owner
+
+                    if (event.nativeEvent instanceof MouseEvent && event.nativeEvent.ctrlKey) {
+                        target = owner.duplicate()
+                        owner.board.addObject(target)
+                        owner.board.select(target)
+                    }
+
                     owner.board.dragActivity = dragActivity
                     dragActivity.interrupted = false
-                    dragActivity.deleteHandler = () => {
-                        owner.board.removeObjectWithUndo(owner)
+                    if (target == owner) {
+                        dragActivity.deleteHandler = () => {
+                            target.board.removeObjectWithUndo(target)
+                        }
+                    } else {
+                        dragActivity.deleteHandler = () => {
+                            target.board.removeObject(target)
+                        }
                     }
                     dragActivity.interruptHandler = event.forceStop
 
                     event.nativeEvent.stopPropagation()
-                    return cloneArray(owner.points)
+                    return [target, cloneArray(owner.points)] as const
                 },
-                onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
+                onMove(event, [target, state]) {
+                    const delta = target.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(target.board.eventScale))
                     if (delta.isZero()) return
-                    owner.points = state.map(v => v.add(delta))
-                    owner.flushChanges()
+                    target.points = state.map(v => v.add(delta))
+                    target.flushChanges()
                 },
-                onMoveEnd(_, state) {
-                    owner.board.dragActivity = null
+                onMoveEnd(_, [target, state]) {
+                    target.board.dragActivity = null
 
                     if (dragActivity.interrupted) {
-                        owner.points = state
-                        owner.flushChanges()
+                        target.points = state
+                        target.flushChanges()
                         return
                     }
 
-                    owner.board.undoSteps.push(() => {
-                        owner.board.select(owner)
-                        owner.points = state
-                        owner.flushChanges()
-                    })
+                    if (target == owner) {
+                        target.board.undoSteps.push(() => {
+                            target.board.select(target)
+                            target.points = state
+                            target.flushChanges()
+                        })
+                    } else {
+                        target.board.undoSteps.push(() => {
+                            target.board.removeObject(target)
+                        })
+                    }
                 },
             })
             this._element.addEventListener("mousedown", handler)
@@ -173,47 +193,69 @@ export class LineWaypointHandle extends DotHandleObject {
             const { owner, index } = this
             const handler = useGrab({
                 onMoveStart(event) {
+                    let target = owner
+
+                    if (event.nativeEvent instanceof MouseEvent && event.nativeEvent.ctrlKey) {
+                        target = owner.duplicate()
+                        owner.board.addObject(target)
+                        owner.board.select(target)
+                    }
+
                     const position = owner.points[index]
 
                     owner.board.dragActivity = dragActivity
                     dragActivity.interrupted = false
-                    dragActivity.deleteHandler = () => {
-                        owner.points.splice(index, 1)
 
-                        owner.board.undoSteps.push(() => {
-                            owner.points.splice(index, 0, position)
+                    if (target == owner) {
+                        dragActivity.deleteHandler = () => {
+                            owner.points.splice(index, 1)
+
+                            owner.board.undoSteps.push(() => {
+                                owner.points.splice(index, 0, position)
+                                owner.rebuildHandles()
+                                owner.flushChanges()
+                            })
+
                             owner.rebuildHandles()
                             owner.flushChanges()
-                        })
-
-                        owner.rebuildHandles()
-                        owner.flushChanges()
+                        }
+                    } else {
+                        dragActivity.deleteHandler = () => {
+                            target.board.removeObject(target)
+                        }
                     }
+
                     dragActivity.interruptHandler = event.forceStop
 
                     event.nativeEvent.stopPropagation()
-                    return position
+                    return [target, position] as const
                 },
-                onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
+                onMove(event, [target, state]) {
+                    const delta = target.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(target.board.eventScale))
                     if (delta.isZero()) return
-                    owner.points[index] = state.add(delta).floor().add(0.5, 0.5)
-                    owner.flushChanges()
+                    target.points[index] = state.add(delta).floor().add(0.5, 0.5)
+                    target.flushChanges()
                 },
-                onMoveEnd(_, state) {
-                    owner.board.dragActivity = null
+                onMoveEnd(_, [target, state]) {
+                    target.board.dragActivity = null
 
                     if (dragActivity.interrupted) {
-                        owner.points[index] = state
-                        owner.flushChanges()
+                        target.points[index] = state
+                        target.flushChanges()
                         return
                     }
 
-                    owner.board.undoSteps.push(() => {
-                        owner.board.select(owner)
-                        owner.points[index] = state
-                        owner.flushChanges()
-                    })
+                    if (target == owner) {
+                        target.board.undoSteps.push(() => {
+                            target.board.select(target)
+                            target.points[index] = state
+                            target.flushChanges()
+                        })
+                    } else {
+                        target.board.undoSteps.push(() => {
+                            target.board.removeObject(target)
+                        })
+                    }
                 },
             })
 
@@ -240,6 +282,10 @@ export class LineObject extends EditableObject {
     public width = LineWidthProperty.add(this, LINE_WIDTHS[1])
     public startArrow = StartArrowProperty.add(this, false)
     public endArrow = EndArrowProperty.add(this, true)
+
+    public translate(offset: Point) {
+        this.points = this.points.map(v => v.add(offset))
+    }
 
     public override rebuildHandles(): void {
         if (this._handles == null) return
@@ -315,5 +361,13 @@ export class LineObject extends EditableObject {
         shape.setAttribute("marker-end", this.endArrow ? marker : "none")
         shape.setAttribute("stroke", this.color.toHex())
         shape.setAttribute("fill", "none")
+    }
+
+    public override duplicate() {
+        const clone = super.duplicate()
+
+        clone.points = cloneArray(this.points)
+
+        return clone
     }
 }

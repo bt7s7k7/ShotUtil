@@ -13,6 +13,7 @@ import { Board } from "./board/Board"
 import { ImageObject } from "./objects/ImageObject"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
+import { ShapeObject } from "./objects/ShapeObject"
 import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty"
 import { ColorProperty, COLORS } from "./properties/ColorProperty"
 import { FillProperty } from "./properties/FillProperty"
@@ -149,6 +150,23 @@ export const Main = (defineComponent({
             if (event.code == "KeyY" && event.ctrlKey) {
                 event.preventDefault()
                 board.undo()
+                return
+            }
+
+            if (event.code == "KeyD" && event.ctrlKey) {
+                event.preventDefault()
+                if (board.selected) {
+                    const clone =  board.selected.duplicate()
+
+                    if (clone instanceof ShapeObject) {
+                        clone.position = clone.position.add(20, 20)
+                    } else if (clone instanceof LineObject) {
+                        clone.translate(new Point(20, 20))
+                    }
+                    
+                    board.addObjectWithUndo(clone)
+                    board.select(clone)
+                }
                 return
             }
 

@@ -28,36 +28,58 @@ export class OutlineHandle extends HandleObject {
             const owner = this.owner
             const handler = useGrab({
                 onMoveStart(event) {
+                    let target = owner
+
+                    if (event.nativeEvent instanceof MouseEvent && event.nativeEvent.ctrlKey) {
+                        target = owner.duplicate()
+                        owner.board.addObject(target)
+                        owner.board.select(target)
+                    }
+
                     owner.board.dragActivity = dragActivity
                     dragActivity.interrupted = false
-                    dragActivity.deleteHandler = () => {
-                        owner.board.removeObjectWithUndo(owner)
+
+                    if (target == owner) {
+                        dragActivity.deleteHandler = () => {
+                            target.board.removeObjectWithUndo(target)
+                        }
+                    } else {
+                        dragActivity.deleteHandler = () => {
+                            target.board.removeObject(target)
+                        }
                     }
+
                     dragActivity.interruptHandler = event.forceStop
 
                     event.nativeEvent.stopPropagation()
-                    return owner.position
+                    return [target, owner.position] as const
                 },
-                onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
+                onMove(event, [target, state]) {
+                    const delta = target.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(target.board.eventScale))
                     if (delta.isZero()) return
-                    owner.position = state.add(delta)
-                    owner.flushChanges()
+                    target.position = state.add(delta)
+                    target.flushChanges()
                 },
-                onMoveEnd(_, state) {
-                    owner.board.dragActivity = null
+                onMoveEnd(_, [target, state]) {
+                    target.board.dragActivity = null
 
                     if (dragActivity.interrupted) {
-                        owner.position = state
-                        owner.flushChanges()
+                        target.position = state
+                        target.flushChanges()
                         return
                     }
 
-                    owner.board.undoSteps.push(() => {
-                        owner.board.select(owner)
-                        owner.position = state
-                        owner.flushChanges()
-                    })
+                    if (target == owner) {
+                        target.board.undoSteps.push(() => {
+                            target.board.select(target)
+                            target.position = state
+                            target.flushChanges()
+                        })
+                    } else {
+                        target.board.undoSteps.push(() => {
+                            target.board.removeObject(target)
+                        })
+                    }
                 },
             })
             this._element.addEventListener("mousedown", handler)
@@ -225,6 +247,15 @@ export abstract class ShapeObject extends EditableObject {
             shape.setAttribute("stroke", this.color.toHex())
             shape.setAttribute("fill", "none")
         }
+    }
+
+    public override duplicate() {
+        const clone = super.duplicate()
+
+        clone.position = this.position
+        clone.size = this.size
+
+        return clone
     }
 
     constructor() {

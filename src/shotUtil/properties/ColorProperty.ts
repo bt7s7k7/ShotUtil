@@ -23,6 +23,6 @@ export class ColorProperty extends Property<Color, { color: Color } & BoardObjec
 
     public set value(value) {
         this.owner.color = value
-        this.owner.flushChanges()
+        if (this.owner.board) this.owner.flushChanges()
     }
 }

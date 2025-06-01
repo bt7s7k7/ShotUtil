@@ -12,7 +12,7 @@ export class LineWidthProperty extends Property<number, { width: number } & Boar
 
     public set value(value) {
         this.owner.width = value
-        this.owner.flushChanges()
+        if (this.owner.board) this.owner.flushChanges()
     }
 
     public get index() { return LINE_WIDTHS.indexOf(this.value) }

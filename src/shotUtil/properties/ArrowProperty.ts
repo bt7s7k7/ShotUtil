@@ -8,7 +8,7 @@ export class StartArrowProperty extends Property<boolean, { startArrow: boolean 
 
     public set value(value) {
         this.owner.startArrow = value
-        this.owner.flushChanges()
+        if (this.owner.board) this.owner.flushChanges()
     }
 }
 
@@ -19,6 +19,6 @@ export class EndArrowProperty extends Property<boolean, { endArrow: boolean } & 
 
     public set value(value) {
         this.owner.endArrow = value
-        this.owner.flushChanges()
+        if (this.owner.board) this.owner.flushChanges()
     }
 }
