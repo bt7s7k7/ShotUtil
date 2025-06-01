@@ -146,6 +146,11 @@ export const Main = (defineComponent({
                 offset.value = state.add(event.deltaX, event.deltaY).floor()
             },
         })
+        function scrollViewport(event: WheelEvent) {
+            let delta = new Point(event.deltaX, event.deltaY)
+            if (event.shiftKey) delta = new Point(0, event.deltaY)
+            offset.value = offset.value.add(delta.mul(-1)).floor()
+        }
 
         const stopPropagation = function(event: Event) { event.stopPropagation() }
 
@@ -193,7 +198,7 @@ export const Main = (defineComponent({
         return () => (
             <UploadOverlay class="flex-fill flex column" onDrop={addImages}
             // @ts-ignore
-            onMousemove={focusPasteInput}
+            onMousemove={focusPasteInput} onWheel={scrollViewport}
             >
                 <div class="bg-secondary-translucent flex row center-cross">
                     <ButtonGroup clear>
