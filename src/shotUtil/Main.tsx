@@ -1,11 +1,12 @@
 import { mdiArrowLeft, mdiArrowRight, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
-import { defineComponent } from "vue"
+import { computed, defineComponent, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
 import { Icon } from "../vue3gui/Icon"
 import { MountNode } from "../vue3gui/MountNode"
 import { Slider } from "../vue3gui/Slider"
 import { ToggleButton } from "../vue3gui/ToggleButton"
+import { useGrab } from "../vue3gui/useGrab"
 import { useEventListener, useResizeWatcher } from "../vue3gui/util"
 import { Board } from "./board/Board"
 import { LineObject } from "./objects/LineObject"
@@ -15,37 +16,97 @@ import { ColorProperty, COLORS } from "./properties/ColorProperty"
 import { FillProperty } from "./properties/FillProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
 
+const _ShapeAdder = defineComponent({
+    name: "_ShapeAdder",
+    props: {
+        label: { type: String, required: true },
+        icon: { type: String, required: true },
+        nudge: { type: Boolean },
+    },
+    emits: {
+        create: (position: Point) => true,
+    },
+    setup(props, ctx) {
+        const add = useGrab({
+            onMoveStart(event) {
+                const decoratorObject = document.createElement("div")
+                render(<Icon icon={props.icon} />, decoratorObject)
+                decoratorObject.setAttribute("class", "absolute")
+                decoratorObject.style.left = event.currentX + "px"
+                decoratorObject.style.top = event.currentY + "px"
+                document.body.appendChild(decoratorObject)
+                return decoratorObject
+            },
+            onMove(event, decoratorObject) {
+                decoratorObject.style.left = event.currentX + "px"
+                decoratorObject.style.top = event.currentY + "px"
+            },
+            onMoveEnd(event, decoratorObject) {
+                decoratorObject.remove()
+                ctx.emit("create", new Point(event.currentX, event.currentY).floor())
+            },
+        })
+
+        return () => (
+            props.nudge ? (
+                <Button icon={props.icon} v-label:bottom-right={props.label} onMouseDown={add} />
+            ) : (
+                <Button icon={props.icon} v-label={props.label} onMouseDown={add} />
+            )
+        )
+    },
+})
+
 export const Main = (defineComponent({
     name: "Main",
     setup(props, ctx) {
-        const board =new Board()
+        const board = new Board()
         board.boardHost.classList.add("absolute-fill")
 
-        useResizeWatcher((size) => {
-            const x = (size.width * 0.5 | 0)
-            const y = (size.height * 0.5 | 0)
+        const offset = shallowRef(Point.zero)
+        const screenSize = useResizeWatcher()
+        const absoluteOffset = computed(() => {
+            return new Point(
+                (screenSize.width * 0.5 | 0) + offset.value.x,
+                (screenSize.height * 0.5 | 0) + offset.value.y,
+            )
+        })
 
+        watch(() => absoluteOffset.value, ({ x, y }) => {
             for (const group of [board.renderHost, board.selectionHost, board.controlHost]) {
                 group.setAttribute("transform", `translate(${x}, ${y})`)
             }
         }, { immediate: true })
 
-        function addRect() {
-            const rect = new RectObject()
-            rect.size = new Point(100,100)
-            board.addObjectWithUndo(rect)
-        } 
-
-        function addLine() {
-            const line = new LineObject()
-            line.points.push(
-                new Point(-100, -100).floor().add(0.5, 0.5),
-                new Point(100, 100).floor().add(0.5, 0.5),
-            )
-            board.addObjectWithUndo(line)
+        function screenToWorld(position: Point) {
+            if (position.y <= 23) {
+                position = offset.value.mul(-1)
+                return board.snapPoint(position)
+            }
+            return board.snapPoint(position.sub(absoluteOffset.value).add(0, -23))
         }
 
-        useEventListener(window, "contextmenu", (event)=>{
+        function addRect(position: Point) {
+            position = screenToWorld(position)
+            const rect = new RectObject()
+            rect.position = position
+            rect.size = new Point(90, 90)
+            board.addObjectWithUndo(rect)
+            board.select(rect)
+        }
+
+        function addLine(position: Point) {
+            position = screenToWorld(position)
+            const line = new LineObject()
+            line.points.push(
+                new Point(-50, -50).floor().add(0.5, 0.5).add(position),
+                new Point(50, 50).floor().add(0.5, 0.5).add(position),
+            )
+            board.addObjectWithUndo(line)
+            board.select(line)
+        }
+
+        useEventListener(window, "contextmenu", (event) => {
             if (board.dragActivity) {
                 event.preventDefault()
                 board.dragActivity.interrupt()
@@ -76,13 +137,13 @@ export const Main = (defineComponent({
             <div class="flex-fill flex column">
                 <div class="bg-secondary-translucent flex row center-cross">
                     <ButtonGroup clear>
-                        <Button icon={mdiShapeSquarePlus} v-label:bottom-right="Add Rectangle" onClick={addRect} />
-                        <Button icon={mdiVectorPolylinePlus} v-label="Add Line" onClick={addLine} />
+                        <_ShapeAdder icon={mdiShapeSquarePlus} label="Add Rectangle" nudge onCreate={addRect} />
+                        <_ShapeAdder icon={mdiVectorPolylinePlus} label="Add Line" onCreate={addLine} />
                         {board.selected && <>
                             <div class="border-left"></div>
                             {ColorProperty.has(board.selected) && <div class="flex row center gap-2">
                                 {COLORS.map(color => (
-                                    <Button plain class="border border-white w-3 h-3" style={{backgroundColor: color.toHex()}} onClick={() => ColorProperty.get(board.selected).value = color} />
+                                    <Button plain class="border border-white w-3 h-3" style={{ backgroundColor: color.toHex() }} onClick={() => ColorProperty.get(board.selected).value = color} />
                                 ))}
                             </div>}
                             {LineWidthProperty.has(board.selected) && <>
@@ -94,14 +155,14 @@ export const Main = (defineComponent({
                                     <ToggleButton
                                         clear icon={mdiArrowLeft} v-label="Start arrow"
                                         vModel={EndArrowProperty.get(board.selected).value}
-                                        enabledStyle={{ clear: false, variant: "success", class:"" }}
+                                        enabledStyle={{ clear: false, variant: "success", class: "" }}
                                     />
                                 </ButtonGroup>}
                                 {StartArrowProperty.has(board.selected) && <ButtonGroup override>
                                     <ToggleButton
                                         clear icon={mdiArrowRight} v-label="End arrow"
                                         vModel={StartArrowProperty.get(board.selected).value}
-                                        enabledStyle={{ clear: false, variant: "success", class:"" }}
+                                        enabledStyle={{ clear: false, variant: "success", class: "" }}
                                     />
                                 </ButtonGroup>}
                             </div>
@@ -109,7 +170,7 @@ export const Main = (defineComponent({
                                 <ToggleButton
                                     clear icon={mdiFormatColorFill} v-label="Start arrow"
                                     vModel={FillProperty.get(board.selected).value}
-                                    enabledStyle={{ clear: false, variant: "success", class:"" }}
+                                    enabledStyle={{ clear: false, variant: "success", class: "" }}
                                 />
                             </ButtonGroup>}
                         </>}
