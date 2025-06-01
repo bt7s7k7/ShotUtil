@@ -22,6 +22,19 @@ export function applyPositionAndSize(element: SVGElement, position: Point | null
         return
     }
 
+    if (element instanceof SVGEllipseElement) {
+        if (position) {
+            element.setAttribute("cx", position.x + "px")
+            element.setAttribute("cy", position.y + "px")
+        }
+
+        if (size) {
+            element.setAttribute("rx", (size.x * 0.5) + "px")
+            element.setAttribute("ry", (size.y * 0.5) + "px")
+        }
+        return
+    }
+
     if (position && size) {
         position = position.add(size.mul(-0.5)).floor()
 

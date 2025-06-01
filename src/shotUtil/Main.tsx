@@ -1,4 +1,4 @@
-import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFlipHorizontal, mdiFlipVertical, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFlipHorizontal, mdiFlipVertical, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeCirclePlus, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { computed, defineComponent, ref, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
@@ -10,6 +10,7 @@ import { UploadOverlay } from "../vue3gui/UploadOverlay"
 import { useGrab } from "../vue3gui/useGrab"
 import { useEventListener, useResizeWatcher } from "../vue3gui/util"
 import { Board } from "./board/Board"
+import { EllipseObject } from "./objects/EllipseObject"
 import { ImageObject } from "./objects/ImageObject"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
@@ -126,6 +127,15 @@ export const Main = (defineComponent({
             rect.size = new Point(90, 90)
             board.addObjectWithUndo(rect)
             board.select(rect)
+        }
+
+        function addEllipse(position: Point) {
+            position = screenToWorld(position)
+            const ellipse = new EllipseObject()
+            ellipse.position = position
+            ellipse.size = new Point(90, 90)
+            board.addObjectWithUndo(ellipse)
+            board.select(ellipse)
         }
 
         function addLine(position: Point) {
@@ -265,6 +275,7 @@ export const Main = (defineComponent({
                 <div class="bg-secondary-translucent flex row center-cross">
                     <ButtonGroup clear>
                         <_ShapeAdder icon={mdiShapeSquarePlus} label="Add Rectangle" nudge onCreate={addRect} />
+                        <_ShapeAdder icon={mdiShapeCirclePlus} label="Add Circle" onCreate={addEllipse} />
                         <_ShapeAdder icon={mdiVectorPolylinePlus} label="Add Line" onCreate={addLine} />
                         {board.selected && <>
                             <div class="border-left border-secondary mx-2 h-4"></div>
