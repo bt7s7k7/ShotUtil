@@ -33,6 +33,8 @@ export class Board {
         return point.mul(1 / this.snapGridSize).floor().mul(this.snapGridSize)
     }
 
+    public eventScale = 1
+
     public dragActivity: DragActivity | null = null
 
     public undoSteps: (() => void)[] = []

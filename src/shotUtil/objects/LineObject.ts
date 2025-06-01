@@ -2,7 +2,7 @@ import { cloneArray } from "../../comTypes/util"
 import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
 import { useGrab } from "../../vue3gui/useGrab"
-import { DragActivity } from "../board/Board"
+import { Board, DragActivity } from "../board/Board"
 import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from "../board/support"
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
@@ -42,7 +42,7 @@ export class LineOutlineHandle extends HandleObject {
                     return cloneArray(owner.points)
                 },
                 onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
                     if (delta.isZero()) return
                     owner.points = state.map(v => v.add(delta))
                     owner.flushChanges()
@@ -105,7 +105,7 @@ export class LineAddWaypointHandle extends HandleObject {
                     return owner.points[index]
                 },
                 onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
                     if (delta.isZero()) return
                     owner.points[index] = state.add(delta).floor().add(0.5, 0.5)
                     owner.flushChanges()
@@ -195,7 +195,7 @@ export class LineWaypointHandle extends DotHandleObject {
                     return position
                 },
                 onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
                     if (delta.isZero()) return
                     owner.points[index] = state.add(delta).floor().add(0.5, 0.5)
                     owner.flushChanges()

@@ -66,6 +66,10 @@ export const Main = (defineComponent({
         board.boardHost.classList.add("absolute-fill")
 
         const offset = shallowRef(Point.zero)
+        const zoom = shallowRef(1)
+        const absoluteZoom = computed(() => {
+            return Math.exp(zoom.value) / Math.exp(1)
+        })
         const screenSize = useResizeWatcher()
         const absoluteOffset = computed(() => {
             return new Point(
@@ -74,18 +78,20 @@ export const Main = (defineComponent({
             )
         })
 
-        watch(() => absoluteOffset.value, ({ x, y }) => {
+        watch(() => [absoluteOffset.value, absoluteZoom.value] as const, ([{ x, y }, zoom]) => {
+            board.eventScale = 1 / zoom
+
             for (const group of [board.renderHost, board.selectionHost, board.controlHost]) {
-                group.setAttribute("transform", `translate(${x}, ${y})`)
+                group.setAttribute("transform", `translate(${x}, ${y}) scale(${zoom})`)
             }
         }, { immediate: true })
 
         function screenToWorld(position: Point) {
             if (position.y <= 23) {
-                position = offset.value.mul(-1)
+                position = offset.value.mul(-1 / absoluteZoom.value)
                 return board.snapPoint(position)
             }
-            return board.snapPoint(position.sub(absoluteOffset.value).add(0, -23))
+            return board.snapPoint(position.sub(absoluteOffset.value).mul(1/absoluteZoom.value).add(0, -23))
         }
 
         function addRect(position: Point) {
@@ -147,6 +153,12 @@ export const Main = (defineComponent({
             },
         })
         function scrollViewport(event: WheelEvent) {
+             if (event.ctrlKey) {
+                event.preventDefault()
+                zoom.value += (event.deltaY * 0.05 | 0) * -0.1
+                return
+            }
+
             let delta = new Point(event.deltaX, event.deltaY)
             if (event.shiftKey) delta = new Point(0, event.deltaY)
             offset.value = offset.value.add(delta.mul(-1)).floor()

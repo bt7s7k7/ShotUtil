@@ -39,7 +39,7 @@ export class OutlineHandle extends HandleObject {
                     return owner.position
                 },
                 onMove(event, state) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
                     if (delta.isZero()) return
                     owner.position = state.add(delta)
                     owner.flushChanges()
@@ -99,7 +99,7 @@ export class ResizeHandle extends DotHandleObject {
                     return [owner.position, owner.size]
                 },
                 onMove(event, [position, size]) {
-                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY))
+                    const delta = owner.board.snapPoint(new Point(event.deltaX, event.deltaY).mul(owner.board.eventScale))
                     if (delta.isZero()) return
 
                     let newSize = owner.size
