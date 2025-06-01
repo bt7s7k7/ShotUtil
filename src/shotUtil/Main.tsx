@@ -1,10 +1,12 @@
-import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFlipHorizontal, mdiFlipVertical, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeCirclePlus, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
-import { computed, defineComponent, ref, render, shallowRef, watch } from "vue"
+import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFlipHorizontal, mdiFlipVertical, mdiFormatAlignCenter, mdiFormatAlignLeft, mdiFormatAlignRight, mdiFormatColorFill, mdiFormatLineWeight, mdiFormatSize, mdiFormatVerticalAlignBottom, mdiFormatVerticalAlignCenter, mdiFormatVerticalAlignTop, mdiShapeCirclePlus, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { computed, defineComponent, PropType, Ref, ref, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
+import { useDynamicsEmitter } from "../vue3gui/DynamicsEmitter"
 import { Icon } from "../vue3gui/Icon"
 import { MountNode } from "../vue3gui/MountNode"
 import { Slider } from "../vue3gui/Slider"
+import { TextField } from "../vue3gui/TextField"
 import { ToggleButton } from "../vue3gui/ToggleButton"
 import { UploadOverlay } from "../vue3gui/UploadOverlay"
 import { useGrab } from "../vue3gui/useGrab"
@@ -15,12 +17,14 @@ import { ImageObject } from "./objects/ImageObject"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
 import { ShapeObject } from "./objects/ShapeObject"
+import { TextObject } from "./objects/TextObject"
 import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty"
 import { ColorProperty, COLORS } from "./properties/ColorProperty"
 import { FillProperty } from "./properties/FillProperty"
 import { FlipXProperty, FlipYProperty } from "./properties/FlipProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
 import { Property } from "./properties/Property"
+import { HorizontalAlignProperty, TextProperty, VerticalAlignProperty } from "./properties/TextProperty"
 
 const _ShapeAdder = defineComponent({
     name: "_ShapeAdder",
@@ -82,12 +86,48 @@ const _BooleanProperty = defineComponent({
             </ButtonGroup>}
         </>
     },
+})
 
+const _EnumProperty = defineComponent({
+    name: "_EnumProperty",
+    props: {
+        board: { type: Board, required: true },
+        property: { type: Function, required: true },
+        options: { type: Array as PropType<{ key: any, icon: string, label: string }[]>, required: true },
+    },
+    setup(props, ctx) {
+        const value = ref(null) as Ref<any>
+
+        const property = props.property as typeof Property
+
+        watch(() => props.board.selected, selected => {
+            if (!property.has(selected)) return
+            value.value = property.get(selected).value
+        }, {immediate: true})
+
+        watch(value, newValue => {
+            property.get(props.board.selected).value = newValue
+        })
+
+        return () => <div class="mx-1 flex row border rounded">
+            {props.options.map(({ icon, label, key }) => (
+                <ButtonGroup override>
+                    <ToggleButton
+                        clear icon={icon} v-label={label}
+                        modelValue={value.value == key} onChange={(v) => v && (value.value = key)}
+                        enabledStyle={{ clear: false, variant: "success", class: "" }}
+                    />
+                </ButtonGroup>
+            ))}
+        </div>
+    },
 })
 
 export const Main = (defineComponent({
     name: "Main",
     setup(props, ctx) {
+        const emitter = useDynamicsEmitter()
+
         const board = new Board()
         board.boardHost.classList.add("absolute-fill")
 
@@ -120,6 +160,10 @@ export const Main = (defineComponent({
             return board.snapPoint(position.sub(absoluteOffset.value).mul(1/absoluteZoom.value).add(0, -23))
         }
 
+        function worldToScreen(position: Point) {
+            return position.mul(absoluteZoom.value).add(absoluteOffset.value).add(0, 23)
+        }
+
         function addRect(position: Point) {
             position = screenToWorld(position)
             const rect = new RectObject()
@@ -136,6 +180,15 @@ export const Main = (defineComponent({
             ellipse.size = new Point(90, 90)
             board.addObjectWithUndo(ellipse)
             board.select(ellipse)
+        }
+
+        function addText(position: Point) {
+            position = screenToWorld(position)
+            const text = new TextObject()
+            text.position = position
+            text.size = new Point(90, 90)
+            board.addObjectWithUndo(text)
+            board.select(text)
         }
 
         function addLine(position: Point) {
@@ -157,7 +210,44 @@ export const Main = (defineComponent({
             }
         })
 
+        function editText() {
+            const property = TextProperty.get(board.selected)
+            const value = ref(property.value)
+            const {position, size} = (board.selected as ShapeObject)
+            const screenPosition = worldToScreen(position.add(size.mul(-0.5)))
+            suspendFocusChange.value++
+
+            emitter.popup(screenPosition, <>
+                <TextField vModel={value.value} class="w-fill" placeholder="Enter text..." focus />
+            </>,{
+                align: "right-down",
+                props: {
+                    backdropCancels: true,
+                    contentClass: "p-0",
+                    class: "p-0",
+                    style: { width: size.x + "px" },
+                },
+            }).then((ok) => {
+                if (!ok) return
+                property.value = value.value
+            }).finally(() => {
+                suspendFocusChange.value--
+            })
+        }
+
         function handleKeypress(event: KeyboardEvent) {
+            if (suspendFocusChange.value > 0) return
+
+            if (event.code == "Enter") {
+                const selected = board.selected
+                if (selected && TextProperty.has(selected)) {
+                    setTimeout(() => {
+                        editText()
+                    }, 10)
+                }
+                return
+            }
+
             if (event.code == "KeyY" && event.ctrlKey) {
                 event.preventDefault()
                 board.undo()
@@ -250,7 +340,9 @@ export const Main = (defineComponent({
         }
 
         const pasteInput = ref<HTMLInputElement>()
+        const suspendFocusChange = ref(0)
         function focusPasteInput() {
+            if (suspendFocusChange.value > 0) return
             pasteInput.value?.focus()
         }
         function handlePaste(event: ClipboardEvent) {
@@ -277,6 +369,7 @@ export const Main = (defineComponent({
                         <_ShapeAdder icon={mdiShapeSquarePlus} label="Add Rectangle" nudge onCreate={addRect} />
                         <_ShapeAdder icon={mdiShapeCirclePlus} label="Add Circle" onCreate={addEllipse} />
                         <_ShapeAdder icon={mdiVectorPolylinePlus} label="Add Line" onCreate={addLine} />
+                        <_ShapeAdder icon={mdiFormatSize} label="Add Text" onCreate={addText} />
                         {board.selected && <>
                             <div class="border-left border-secondary mx-2 h-4"></div>
 
@@ -299,6 +392,22 @@ export const Main = (defineComponent({
                             <_BooleanProperty board={board} icon={mdiFormatColorFill} label="Fill" property={FillProperty} />
                             <_BooleanProperty board={board} icon={mdiFlipHorizontal} label="Flip horizontal" property={FlipXProperty} />
                             <_BooleanProperty board={board} icon={mdiFlipVertical} label="Flip vertical" property={FlipYProperty} />
+
+                            {HorizontalAlignProperty.has(board.selected) && (
+                                <_EnumProperty board={board} options={[
+                                    { key: "start", icon: mdiFormatAlignLeft, label: "Align left" },
+                                    { key: "middle", icon: mdiFormatAlignCenter, label: "Align middle" },
+                                    { key: "end", icon: mdiFormatAlignRight, label: "Align right" },
+                                ]} property={HorizontalAlignProperty} />
+                            )}
+
+                            {VerticalAlignProperty.has(board.selected) && (
+                                <_EnumProperty board={board} options={[
+                                    { key: "auto", icon: mdiFormatVerticalAlignBottom, label: "Align bottom" },
+                                    { key: "middle", icon: mdiFormatVerticalAlignCenter, label: "Align center" },
+                                    { key: "hanging", icon: mdiFormatVerticalAlignTop, label: "Align top" },
+                                ]} property={VerticalAlignProperty} />
+                            )}
                         </>}
                     </ButtonGroup>
                 </div>
