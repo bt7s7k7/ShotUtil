@@ -133,6 +133,20 @@ export const Main = (defineComponent({
             }
         })
 
+        const dragViewport = useGrab({
+            button: 1,
+            onMoveStart(event) {
+                event.nativeEvent.preventDefault()
+                event.nativeEvent.stopPropagation()
+                return offset.value
+            },
+            onMove(event, state) {
+                offset.value = state.add(event.deltaX, event.deltaY).floor()
+            },
+        })
+
+        const stopPropagation = function(event: Event) { event.stopPropagation() }
+
         return () => (
             <div class="flex-fill flex column">
                 <div class="bg-secondary-translucent flex row center-cross">
@@ -176,7 +190,7 @@ export const Main = (defineComponent({
                         </>}
                     </ButtonGroup>
                 </div>
-                <div class="flex-fill">
+                <div class="flex-fill" onMousedown={dragViewport} onPointerdown={stopPropagation}>
                     <MountNode node={board.boardHost} />
                 </div>
             </div>
