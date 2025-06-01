@@ -1,14 +1,16 @@
 import { mdiArrowLeft, mdiArrowRight, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
-import { computed, defineComponent, render, shallowRef, watch } from "vue"
+import { computed, defineComponent, ref, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
 import { Icon } from "../vue3gui/Icon"
 import { MountNode } from "../vue3gui/MountNode"
 import { Slider } from "../vue3gui/Slider"
 import { ToggleButton } from "../vue3gui/ToggleButton"
+import { UploadOverlay } from "../vue3gui/UploadOverlay"
 import { useGrab } from "../vue3gui/useGrab"
 import { useEventListener, useResizeWatcher } from "../vue3gui/util"
 import { Board } from "./board/Board"
+import { ImageObject } from "./objects/ImageObject"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
 import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty"
@@ -114,7 +116,7 @@ export const Main = (defineComponent({
             }
         })
 
-        useEventListener(window, "keypress", (event) => {
+        function handleKeypress(event: KeyboardEvent) {
             if (event.code == "KeyY" && event.ctrlKey) {
                 event.preventDefault()
                 board.undo()
@@ -131,7 +133,7 @@ export const Main = (defineComponent({
                     board.removeObjectWithUndo(board.selected)
                 }
             }
-        })
+        }
 
         const dragViewport = useGrab({
             button: 1,
@@ -147,8 +149,52 @@ export const Main = (defineComponent({
 
         const stopPropagation = function(event: Event) { event.stopPropagation() }
 
+        function addImages(files: File[]) {
+            for (const file of files) {
+                (async () => {
+                    const url = await new Promise<string>((resolve) => {
+                        const reader = new FileReader()
+                        reader.addEventListener("load", () => {
+                            const url = reader.result
+                            resolve(url as string)
+                        })
+                        reader.readAsDataURL(file)
+                    })
+                    
+                    const size = await new Promise<Point>(resolve => {
+                        const image = new Image()
+                        image.addEventListener("load", () => {
+                            resolve(new Point(image.width, image.height))
+                        })
+                        image.src = url
+                    })
+
+                    const image = new ImageObject()
+                    image.src = url
+                    image.nativeSize = size
+                    image.size = board.snapPoint(size)
+                    image.position = board.snapPoint(offset.value.mul(-1))
+
+                    board.addObjectWithUndo(image)
+                })()
+            }
+        }
+
+        const pasteInput = ref<HTMLInputElement>()
+        function focusPasteInput() {
+            pasteInput.value?.focus()
+        }
+        function handlePaste(event: ClipboardEvent) {
+            if (event.clipboardData == null) return
+            const files = [...event.clipboardData.files]
+            addImages(files)
+        }
+
         return () => (
-            <div class="flex-fill flex column">
+            <UploadOverlay class="flex-fill flex column" onDrop={addImages}
+            // @ts-ignore
+            onMousemove={focusPasteInput}
+            >
                 <div class="bg-secondary-translucent flex row center-cross">
                     <ButtonGroup clear>
                         <_ShapeAdder icon={mdiShapeSquarePlus} label="Add Rectangle" nudge onCreate={addRect} />
@@ -191,9 +237,10 @@ export const Main = (defineComponent({
                     </ButtonGroup>
                 </div>
                 <div class="flex-fill" onMousedown={dragViewport} onPointerdown={stopPropagation}>
+                    <input ref={pasteInput} onPaste={handlePaste} class="opacity-0" onKeydown={handleKeypress} />
                     <MountNode node={board.boardHost} />
                 </div>
-            </div>
+            </UploadOverlay>
         )
     },
 }))

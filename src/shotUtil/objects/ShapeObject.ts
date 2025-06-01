@@ -68,7 +68,7 @@ export class OutlineHandle extends HandleObject {
 
     public override flush(): void {
         const { position, size } = this.owner
-        applyPositionAndSize(this.getElement(), position, size)
+        applyPositionAndSize(this.getElement(), position, size, true)
     }
 
     constructor(
@@ -157,7 +157,7 @@ export class ResizeHandle extends DotHandleObject {
     public override flush(): void {
         const { position, size } = this.owner
         const alignedPosition = this.direction.mul(0.5).scale(size).add(position)
-        applyPositionAndSize(this.getElement(), alignedPosition, null)
+        applyPositionAndSize(this.getElement(), alignedPosition, null, true)
     }
 
     constructor(
@@ -204,14 +204,14 @@ export abstract class ShapeObject extends EditableObject {
             if (this.fill) {
                 shape.setAttribute("stroke-width", "3")
                 shape.setAttribute("fill", TRANSPARENT)
-                applyPositionAndSize(shape, this.position, this.size)
+                applyPositionAndSize(shape, this.position, this.size, false)
             } else {
                 shape.setAttribute("stroke-width", "8")
                 shape.setAttribute("fill", "none")
-                applyPositionAndSize(shape, this.position, this.size.add(-4, -4))
+                applyPositionAndSize(shape, this.position, this.size.add(-4, -4), true)
             }
         } else {
-            applyPositionAndSize(shape, this.position, this.size)
+            applyPositionAndSize(shape, this.position, this.size, !this.fill)
         }
     }
 

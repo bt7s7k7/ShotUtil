@@ -155,7 +155,7 @@ export class LineAddWaypointHandle extends HandleObject {
 
     public flush(): void {
         const position = this._getPosition()
-        applyPositionAndSize(this.getElement(), position, new Point(8, 8))
+        applyPositionAndSize(this.getElement(), position, new Point(8, 8), true)
     }
 
     constructor(
@@ -225,7 +225,7 @@ export class LineWaypointHandle extends DotHandleObject {
 
     public flush(): void {
         const position = this.owner.points[this.index]
-        applyPositionAndSize(this.getElement(), position, null)
+        applyPositionAndSize(this.getElement(), position, null, true)
     }
 
     constructor(

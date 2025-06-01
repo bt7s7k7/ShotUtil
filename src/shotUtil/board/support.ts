@@ -1,4 +1,3 @@
-import { unreachable } from "../../comTypes/util"
 import { Point } from "../../drawer/Point"
 
 export const TRANSPARENT = "rgba(0,0,0,0)"
@@ -10,25 +9,7 @@ export function createSvgElement<TTagName extends keyof SVGElementTagNameMap>(ta
     return document.createElementNS("http://www.w3.org/2000/svg", tagName)
 }
 
-export function applyPositionAndSize(element: SVGElement, position: Point | null, size: Point | null) {
-    if (element instanceof SVGRectElement) {
-        if (position && size) {
-            position = position.add(size.mul(-0.5)).floor().add(0.5, 0.5)
-        }
-
-        if (position) {
-            element.setAttribute("x", position.x + "px")
-            element.setAttribute("y", position.y + "px")
-        }
-
-        if (size) {
-            element.setAttribute("width", size.x + "px")
-            element.setAttribute("height", size.y + "px")
-        }
-
-        return
-    }
-
+export function applyPositionAndSize(element: SVGElement, position: Point | null, size: Point | null, enableStrokeCorrection: boolean) {
     if (element instanceof SVGCircleElement) {
         if (position) {
             element.setAttribute("cx", position.x + "px")
@@ -41,7 +22,23 @@ export function applyPositionAndSize(element: SVGElement, position: Point | null
         return
     }
 
-    unreachable()
+    if (position && size) {
+        position = position.add(size.mul(-0.5)).floor()
+
+        if (enableStrokeCorrection) {
+            position = position.add(0.5, 0.5)
+        }
+    }
+
+    if (position) {
+        element.setAttribute("x", position.x + "px")
+        element.setAttribute("y", position.y + "px")
+    }
+
+    if (size) {
+        element.setAttribute("width", size.x + "px")
+        element.setAttribute("height", size.y + "px")
+    }
 }
 
 export function buildPolyline(points: Point[], width: number, height: number, flipX: boolean, flipY: boolean) {
