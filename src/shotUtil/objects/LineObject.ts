@@ -1,11 +1,14 @@
 import { cloneArray } from "../../comTypes/util"
+import { Color } from "../../drawer/Color"
 import { Point } from "../../drawer/Point"
 import { useGrab } from "../../vue3gui/useGrab"
-import { Board, DragActivity } from "../board/Board"
+import { DragActivity } from "../board/Board"
 import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR, PRIMARY_COLOR, SECONDARY_COLOR } from "../board/support"
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
 import { HandleObject } from "../editable/HandleObject"
+import { ColorProperty } from "../properties/ColorProperty"
+import { LINE_WIDTHS, LineWidthProperty } from "../properties/LineWidthProperty"
 
 const MIN_SELECTABLE_LINE_WIDTH = 6
 const ADD_WAYPOINT_HANDLE_OFFSET = 35
@@ -65,7 +68,7 @@ export class LineOutlineHandle extends HandleObject {
 
     public override flush(): void {
         const element = this.getElement()
-        element.setAttribute("stroke-width", Math.max(MIN_SELECTABLE_LINE_WIDTH, this.owner.width) + "px")
+        element.setAttribute("stroke-width", MIN_SELECTABLE_LINE_WIDTH + "px")
         element.setAttribute("points", this.owner["_getRenderShape"]().getAttribute("points")!)
     }
 
@@ -229,8 +232,9 @@ export class LineWaypointHandle extends DotHandleObject {
 }
 
 export class LineObject extends EditableObject {
+    public color = ColorProperty.add(this, Color.red)
     public points: Point[] = []
-    public width = 1
+    public width = LineWidthProperty.add(this, LINE_WIDTHS[1])
 
     public override rebuildHandles(): void {
         if (this._handles == null) return
@@ -255,7 +259,9 @@ export class LineObject extends EditableObject {
 
     protected override _getSelectionElement(): SVGElement {
         if (this._selectionElement == null) {
-            super._getSelectionElement().setAttribute("stroke-width", Math.max(MIN_SELECTABLE_LINE_WIDTH, this.width) + "px")
+            const element = super._getSelectionElement()
+            element.setAttribute("stroke-width", Math.max(MIN_SELECTABLE_LINE_WIDTH, this.width) + "px")
+            element.setAttribute("fill", "none")
         }
 
         return super._getSelectionElement()
@@ -263,11 +269,17 @@ export class LineObject extends EditableObject {
 
     protected override _flushGeometry(shape: SVGElement): void {
         shape.setAttribute("points", this.points.map(v => `${v.x},${v.y}`).join(" "))
+        if (shape == this._getSelectionElement()) {
+            shape.setAttribute("stroke-width", Math.max(MIN_SELECTABLE_LINE_WIDTH, this.width) + "px")
+        } else {
+            shape.setAttribute("stroke-width", `${this.width}px`)
+        }
+    }
+
     }
 
     protected override _flushStyle(shape: SVGElement): void {
-        shape.setAttribute("stroke", "white")
-        shape.setAttribute("stroke-width", `${this.width}px`)
+        shape.setAttribute("stroke", this.color.toHex())
         shape.setAttribute("fill", "none")
     }
 }

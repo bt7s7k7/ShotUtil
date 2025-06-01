@@ -1,3 +1,4 @@
+import { shallowReactive } from "vue"
 import { arrayRemove, unreachable } from "../../comTypes/util"
 import { Point } from "../../drawer/Point"
 import { BoardObject } from "./BoardObject"
@@ -59,6 +60,7 @@ export class Board {
     public addObject(object: BoardObject) {
         this.objects.push(object)
         object.init(this)
+        object.flushChanges()
     }
 
     public removeObjectWithUndo(object: BoardObject) {
@@ -90,8 +92,12 @@ export class Board {
 
         this.boardHost.append(this.renderHost, this.selectionHost, this.controlHost)
 
+        const self = shallowReactive(this)
+
         this.boardHost.addEventListener("click", () => {
-            this.select(null)
+            self.select(null)
         })
+
+        return self
     }
 }

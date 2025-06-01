@@ -1,12 +1,17 @@
-import { mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrowLeft, mdiArrowRight, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { defineComponent } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
+import { Icon } from "../vue3gui/Icon"
 import { MountNode } from "../vue3gui/MountNode"
+import { Slider } from "../vue3gui/Slider"
+import { ToggleButton } from "../vue3gui/ToggleButton"
 import { useEventListener, useResizeWatcher } from "../vue3gui/util"
 import { Board } from "./board/Board"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
+import { ColorProperty, COLORS } from "./properties/ColorProperty"
+import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
 
 export const Main = (defineComponent({
     name: "Main",
@@ -26,7 +31,6 @@ export const Main = (defineComponent({
         function addRect() {
             const rect = new RectObject()
             rect.size = new Point(100,100)
-            rect.flushChanges()
             board.addObjectWithUndo(rect)
         } 
 
@@ -36,7 +40,6 @@ export const Main = (defineComponent({
                 new Point(-100, -100).floor().add(0.5, 0.5),
                 new Point(100, 100).floor().add(0.5, 0.5),
             )
-            line.flushChanges()
             board.addObjectWithUndo(line)
         }
 
@@ -69,10 +72,22 @@ export const Main = (defineComponent({
 
         return () => (
             <div class="flex-fill flex column">
-                <div class="bg-secondary-translucent">
+                <div class="bg-secondary-translucent flex row center-cross">
                     <ButtonGroup clear>
                         <Button icon={mdiShapeSquarePlus} v-label:bottom-right="Add Rectangle" onClick={addRect} />
                         <Button icon={mdiVectorPolylinePlus} v-label="Add Line" onClick={addLine} />
+                        {board.selected && <>
+                            <div class="border-left"></div>
+                            {ColorProperty.has(board.selected) && <div class="flex row center gap-2">
+                                {COLORS.map(color => (
+                                    <Button plain class="border border-white w-3 h-3" style={{backgroundColor: color.toHex()}} onClick={() => ColorProperty.get(board.selected).value = color} />
+                                ))}
+                            </div>}
+                            {LineWidthProperty.has(board.selected) && <>
+                                <Icon icon={mdiFormatLineWeight} class="mx-2" />
+                                <Slider class="w-200" min={0} max={LINE_WIDTHS.length - 1} step={1} stepped vModel={LineWidthProperty.get(board.selected).index} />
+                            </>}
+                        </>}
                     </ButtonGroup>
                 </div>
                 <div class="flex-fill">
