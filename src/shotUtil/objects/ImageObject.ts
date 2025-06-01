@@ -1,10 +1,14 @@
 import { Point } from "../../drawer/Point"
 import { applyPositionAndSize, createSvgElement } from "../board/support"
+import { FlipXProperty, FlipYProperty } from "../properties/FlipProperty"
 import { ShapeObject } from "./ShapeObject"
 
 export class ImageObject extends ShapeObject {
     public src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAAXNSR0IArs4c6QAAACdJREFUKFNj/M/w/z8DGmBkYEQXYmAcCgoZGBgwPPMfUwjsvcGuEABTfx33POuuvQAAAABJRU5ErkJggg=="
     public nativeSize = Point.zero
+
+    public flipX = FlipXProperty.add(this, false)
+    public flipY = FlipYProperty.add(this, false)
 
     protected _renderElement: SVGImageElement | null = null
     protected _getRenderShape(): SVGElement {
@@ -36,6 +40,7 @@ export class ImageObject extends ShapeObject {
     protected override _flushStyle(shape: SVGElement): void {
         if (shape == this._renderElement) {
             this._renderElement.setAttribute("href", this.src)
+            this._renderElement.setAttribute("transform", this.flipX || this.flipY ? `scale(${this.flipX ? -1 : 1},${this.flipY ? -1 : 1})` : "")
         }
     }
 

@@ -1,4 +1,4 @@
-import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
+import { mdiArrangeBringToFront, mdiArrangeSendToBack, mdiArrowLeft, mdiArrowRight, mdiFlipHorizontal, mdiFlipVertical, mdiFormatColorFill, mdiFormatLineWeight, mdiShapeSquarePlus, mdiVectorPolylinePlus } from "@mdi/js"
 import { computed, defineComponent, ref, render, shallowRef, watch } from "vue"
 import { Point } from "../drawer/Point"
 import { Button, ButtonGroup } from "../vue3gui/Button"
@@ -17,6 +17,7 @@ import { ShapeObject } from "./objects/ShapeObject"
 import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty"
 import { ColorProperty, COLORS } from "./properties/ColorProperty"
 import { FillProperty } from "./properties/FillProperty"
+import { FlipXProperty, FlipYProperty } from "./properties/FlipProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
 import { Property } from "./properties/Property"
 
@@ -285,6 +286,8 @@ export const Main = (defineComponent({
                             <_BooleanProperty board={board} icon={mdiArrowLeft} label="Show arrow at start" property={StartArrowProperty} />
                             <_BooleanProperty board={board} icon={mdiArrowRight} label="Show arrow at end" property={EndArrowProperty} />
                             <_BooleanProperty board={board} icon={mdiFormatColorFill} label="Fill" property={FillProperty} />
+                            <_BooleanProperty board={board} icon={mdiFlipHorizontal} label="Flip horizontal" property={FlipXProperty} />
+                            <_BooleanProperty board={board} icon={mdiFlipVertical} label="Flip vertical" property={FlipYProperty} />
                         </>}
                     </ButtonGroup>
                 </div>
