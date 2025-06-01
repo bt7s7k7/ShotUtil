@@ -43,3 +43,20 @@ export function applyPositionAndSize(element: SVGElement, position: Point | null
 
     unreachable()
 }
+
+export function buildPolyline(points: Point[], width: number, height: number, flipX: boolean, flipY: boolean) {
+    return points.map(point => {
+        let x = point.x * width
+        let y = point.y * height
+
+        if (flipX) {
+            x = width - x
+        }
+
+        if (flipY) {
+            y = height - y
+        }
+
+        return `${x},${y}`
+    }).join(" ")
+}

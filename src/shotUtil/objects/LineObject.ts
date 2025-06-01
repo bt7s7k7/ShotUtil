@@ -7,8 +7,11 @@ import { applyPositionAndSize, createSvgElement, HIGHLIGHT_COLOR, PRIMARY_COLOR,
 import { DotHandleObject } from "../editable/DotHandleObject"
 import { EditableObject } from "../editable/EditableObject"
 import { HandleObject } from "../editable/HandleObject"
+import { EndArrowProperty, StartArrowProperty } from "../properties/ArrowProperty"
 import { ColorProperty } from "../properties/ColorProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "../properties/LineWidthProperty"
+import { ArrowMarkerObject } from "./ArrowMarkerObject"
+import { MarkerObject } from "./MarkerObject"
 
 const MIN_SELECTABLE_LINE_WIDTH = 6
 const ADD_WAYPOINT_HANDLE_OFFSET = 35
@@ -235,6 +238,8 @@ export class LineObject extends EditableObject {
     public color = ColorProperty.add(this, Color.red)
     public points: Point[] = []
     public width = LineWidthProperty.add(this, LINE_WIDTHS[1])
+    public startArrow = StartArrowProperty.add(this, true)
+    public endArrow = EndArrowProperty.add(this, false)
 
     public override rebuildHandles(): void {
         if (this._handles == null) return
@@ -250,6 +255,15 @@ export class LineObject extends EditableObject {
             ...this.points.map((_, i) => new LineAddWaypointHandle(this, i)),
             new LineAddWaypointHandle(this, this.points.length),
         ]
+    }
+
+    public override teardown(): void {
+        super.teardown()
+
+        if (this._marker) {
+            this._marker.unref()
+            this._marker = null
+        }
     }
 
     protected _element: SVGPolylineElement | null = null
@@ -276,9 +290,29 @@ export class LineObject extends EditableObject {
         }
     }
 
+    protected _marker: MarkerObject | null = null
+    protected _getMarker() {
+        if (this.startArrow || this.endArrow) {
+            if (this._marker == null) {
+                this._marker = ArrowMarkerObject.getInstance(this.board)
+                this._marker.ref()
+            }
+
+            return this._marker.getReference()
+        } else {
+            if (this._marker) {
+                this._marker.unref()
+                this._marker = null
+            }
+
+            return "none"
+        }
     }
 
     protected override _flushStyle(shape: SVGElement): void {
+        const marker = this._getMarker()
+        shape.setAttribute("marker-start", this.startArrow ? marker : "none")
+        shape.setAttribute("marker-end", this.endArrow ? marker : "none")
         shape.setAttribute("stroke", this.color.toHex())
         shape.setAttribute("fill", "none")
     }

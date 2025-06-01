@@ -10,6 +10,7 @@ import { useEventListener, useResizeWatcher } from "../vue3gui/util"
 import { Board } from "./board/Board"
 import { LineObject } from "./objects/LineObject"
 import { RectObject } from "./objects/RectObject"
+import { EndArrowProperty, StartArrowProperty } from "./properties/ArrowProperty"
 import { ColorProperty, COLORS } from "./properties/ColorProperty"
 import { LINE_WIDTHS, LineWidthProperty } from "./properties/LineWidthProperty"
 
@@ -87,6 +88,22 @@ export const Main = (defineComponent({
                                 <Icon icon={mdiFormatLineWeight} class="mx-2" />
                                 <Slider class="w-200" min={0} max={LINE_WIDTHS.length - 1} step={1} stepped vModel={LineWidthProperty.get(board.selected).index} />
                             </>}
+                            <div class="mx-2 flex row">
+                                {EndArrowProperty.has(board.selected) && <ButtonGroup override>
+                                    <ToggleButton
+                                        clear icon={mdiArrowLeft} v-label="Start arrow"
+                                        vModel={EndArrowProperty.get(board.selected).value}
+                                        enabledStyle={{ clear: false, variant: "success", class:"" }}
+                                    />
+                                </ButtonGroup>}
+                                {StartArrowProperty.has(board.selected) && <ButtonGroup override>
+                                    <ToggleButton
+                                        clear icon={mdiArrowRight} v-label="End arrow"
+                                        vModel={StartArrowProperty.get(board.selected).value}
+                                        enabledStyle={{ clear: false, variant: "success", class:"" }}
+                                    />
+                                </ButtonGroup>}
+                            </div>
                         </>}
                     </ButtonGroup>
                 </div>
